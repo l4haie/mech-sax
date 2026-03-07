@@ -1,0 +1,13 @@
+*.aux
+*.fls
+*.log
+*.fdb_latexmk
+*.nav
+*.out
+*.snm
+*.toc
+*.synctex.gz
+*.gnuplot
+*.bbl
+*.blg
+.vscode
