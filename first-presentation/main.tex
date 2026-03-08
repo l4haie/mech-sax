@@ -43,7 +43,7 @@ unchanged:
 \]
 % Example: No cut-free proof of transitivity
 \textbf{Cut elimination fails} because axioms introduce formulas that can't be
-unpacked:
+decomposed:
 \[\tiny
   \infer[{\supset}R]{A \supset B, B \supset C \vdash A \supset C}{
     \infer[\text{Cut}_B]{A, A \supset B, B \supset C \vdash C}{
@@ -61,7 +61,7 @@ labeling formula occurrences as eligible ($^*$) or irrelevant ($^0$) and
 propagating upward through the derivation:
 \[\tiny
   \infer[{\supset}R]{x:A \supset B, y:B \supset C \vdash z:A \supset C}{
-    \infer[\text{Snip}_B]{u^*:A, x:A \supset B, y: \supset C \vdash w^*:C}{
+    \infer[\text{Snip}_B]{u^*:A, x:A \supset B, y:B \supset C \vdash w^*:C}{
       \infer[{\supset}L^0]{u^*:A, x:A \supset B, y^0:B \supset C \vdash t^*:B}{} &
       \infer[{\supset}L^0]{u^0:A, x^0:A \supset B, t^*:B, y:B \supset C \vdash w^*:C}{}
     }
