@@ -1,0 +1,70 @@
+LF o : type =  % formulas
+  | ⊃ : o → o → o
+  | unit : o
+  | ⊗   : o → o → o
+  | ∨   : o → o → o
+  | & : o → o → o
+;
+
+--infix ⊗ 7 right.
+--infix & 6 right.
+--infix ∨ 5 right.
+--infix ⊃ 4 right.
+
+
+%Sequent Calculus (w/ cut)
+LF hyp  : o → type = ;  % Hypotheses (left)
+LF conc : o → type =    % Conclusion (right)
+  | initial : (hyp A → conc A)
+  | &R  : conc A → conc B →
+	  conc (A & B)
+  | &L1 : (hyp A → conc C) →
+	  (hyp (A & B) →
+	   conc C)
+  | &L2 : (hyp B → conc C) →
+	  (hyp (A & B) →
+	   conc C)
+  | ⊃R  : (hyp A → conc B) →
+	  conc (A ⊃ B)
+  | ⊃L  : conc A →
+	  (hyp B → conc C) →
+	  hyp (A ⊃ B)
+	  → conc C
+  | ∨R1  : conc A → conc (A ∨ B)
+  | ∨R2  : conc B → conc (A ∨ B)
+  | ∨L   : (hyp A → conc C)
+	   → (hyp B → conc C)
+	   → hyp (A ∨ B) → conc C
+  | cut : conc A → (hyp A → conc C) → conc C
+  | ⊗R  : conc A → conc B →
+	  conc (A ⊗ B)
+  | ⊗L : (hyp A → hyp B → conc C)
+	 → (hyp (A ⊗ B) → conc C)
+  | unitR : conc unit
+  | unitL : conc C
+	    → (hyp unit → conc C)
+;
+
+%SAX
+
+LF hypS : o → type = ;
+LF concS : o → type =
+  | initialS : (hypS A → concS A)
+  | &RS  : concS A → concS B →
+	   concS (A & B)
+  | &L01S : hypS (A & B) → concS A
+  | &L02S : hypS (A & B) → concS B
+  | ⊃RS  : (hypS A → concS B) →
+	   concS (A ⊃ B)
+  | ⊃L0S  : hypS A → hypS (A ⊃ B) → concS B
+  | ∨R01S  : hypS A → concS (A ∨ B)
+  | ∨R02S  : hypS B → concS (A ∨ B)
+  | ∨LS   : (hypS A → concS C) → (hypS B → concS C) → (hypS (A ∨ B) → concS C)
+  | cutS : concS A → (hypS A → concS C) → concS C
+  | ⊗R0S  : (hypS A → hypS B → concS (A ⊗ B))
+  | ⊗LS : (hypS A → hypS B → concS C)
+	  → (hypS (A ⊗ B) → concS C)
+  | unitRS : concS unit
+  | unitLS : concS C
+	     → (hypS unit → concS C)
+;
