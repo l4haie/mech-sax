@@ -73,7 +73,28 @@ Admissibility of cut
 \end{frame}
 
 \begin{frame}{SAX: Shared Memory Interpretation}
-    
+    \begin{itemize}
+        \item We take our proof terms from the shared memory interpretation as in DeYoung et al.\cite{DeYoung2020}, rather than the message passing interpretation explored by many others.
+        \item For a sequent $x_1: a_1, x_2: a_2,\dots, x_3: a_3 \vdash z:C$, we read that the process $P$ (that this sequent represents) reads from memory address $a_1, \dots, a_n$ and writes to address $z$. We can, of course, find $P$ from the deriviation of this sequent. Conversely, the sequent acts as a typing expression for $P$, which we represent $x_1: a_1, x_2: a_2,\dots, x_3: a_3 \vdash P :: (z : C)$.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{SAX: Shared Memory Interpretation}
+    \begin{itemize}
+        \item We find most of the proof terms relatively intuitive, though implication seems to give us some trouble:
+    \end{itemize}
+    $$\infer[{\supset}L^0]{\Gamma, y^* : A, x: A \supset B \vdash x^R. \langle y, z \rangle :: (z^* : B)}{}$$
+    \begin{itemize}
+        \item $x$ represents the address of $A \supset B$, $y$ is the standard argument (that the function takes an input of type $A$), $z$ is the address of the result of the function
+    \end{itemize}
+\end{frame}
+
+
+\begin{frame}{SAX: Shared Memory Interpretation}
+    $$\infer[]{\Gamma \vdash \textsf{case }x^W (\langle y, x \rangle \Rightarrow P) :: (x: A \supset B)}{\Gamma, y: A \vdash P :: (z: B)}$$
+    \begin{itemize}
+        \item This writes the continuation $\langle y, z \rangle \Rightarrow P$ to the address $x$
+    \end{itemize}
 \end{frame}
 
 \begin{frame}{Mechanizing SAX (\& SNAX)}
