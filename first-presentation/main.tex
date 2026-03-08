@@ -97,10 +97,41 @@ Admissibility of cut
     \end{itemize}
 \end{frame}
 
-\begin{frame}{Mechanizing SAX (\& SNAX)}
-    
+\begin{frame}{Mechanizing SAX}
+
+  Concrete thoughts so far:
+    \begin{itemize}
+      \item $G_3$ and Theorems 1 and 2 (cut elim. $G_3$) $\checkmark$ (Pfenning 2000) \textcolor{red}{In LF, not Beluga}
+      \item SAX $\checkmark$ , Theorem 3 (translation) should follow
+      \item Eligibility for snips as well-formedness predicate (a la linearity predicate)
+      \item Choosing one of Theorem 4 or 6 (cut elim. in SAX)? Theorem 5 (admiss.) proof looks complicated
+      \item Metatheoretic properties look standard
+    \end{itemize}
 \end{frame}
 
+\begin{frame}
+  \scriptsize
+\ttfamily
+
+LF hypS : o $\to$ type = ;\\
+LF concS : o $\to$ type =\\[4pt]
+
+\quad | initialS : (hypS A $\to$ concS A)\\
+\quad | \&RS : concS A $\to$ concS B $\to$ concS (A \& B)\\
+\quad | \&L01S : hypS (A \& B) $\to$ concS A\\
+\quad | \&L02S : hypS (A \& B) $\to$ concS B\\
+\quad | $\supset$RS : (hypS A $\to$ concS B) $\to$ concS (A $\supset$ B)\\
+\quad | $\supset$L0S : hypS A $\to$ hypS (A $\supset$ B) $\to$ concS B\\
+\quad | $\vee$R01S : hypS A $\to$ concS (A $\vee$ B)\\
+\quad | $\vee$R02S : hypS B $\to$ concS (A $\vee$ B)\\
+\quad | $\vee$LS : (hypS A $\to$ concS C) $\to$ (hypS B $\to$ concS C) $\to$ (hypS (A $\vee$ B) $\to$ concS C)\\
+\quad | cutS : concS A $\to$ (hypS A $\to$ concS C) $\to$ concS C\\
+\quad | $\otimes$R0S : hypS A $\to$ hypS B $\to$ concS (A $\otimes$ B)\\
+\quad | $\otimes$LS : (hypS A $\to$ hypS B $\to$ concS C) $\to$ (hypS (A $\otimes$ B) $\to$ concS C)\\
+\quad | unitRS : concS unit\\
+\quad | unitLS : concS C $\to$ (hypS unit $\to$ concS C)\\
+;
+\end{frame}
 \begin{frame} {Related Work}
     \begin{itemize}
         \item Francalaza et. al\cite{FrancalanzaTP24} Presents an implementation of the message-passing interpretation of SAX in Go. Instead of focusing on a pure implementation, we focus on a mechanization of the meta-theoretic properties.
