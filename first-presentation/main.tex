@@ -118,29 +118,6 @@ $\mathtt{cell}(c, \_)$
     \end{itemize}
 \end{frame}
 
-\begin{frame}
-  \scriptsize
-\ttfamily
-
-LF hypS : o $\to$ type = ;\\
-LF concS : o $\to$ type =\\[4pt]
-
-\quad | initialS : (hypS A $\to$ concS A)\\
-\quad | \&RS : concS A $\to$ concS B $\to$ concS (A \& B)\\
-\quad | \&L01S : hypS (A \& B) $\to$ concS A\\
-\quad | \&L02S : hypS (A \& B) $\to$ concS B\\
-\quad | $\supset$RS : (hypS A $\to$ concS B) $\to$ concS (A $\supset$ B)\\
-\quad | $\supset$L0S : hypS A $\to$ hypS (A $\supset$ B) $\to$ concS B\\
-\quad | $\vee$R01S : hypS A $\to$ concS (A $\vee$ B)\\
-\quad | $\vee$R02S : hypS B $\to$ concS (A $\vee$ B)\\
-\quad | $\vee$LS : (hypS A $\to$ concS C) $\to$ (hypS B $\to$ concS C) $\to$ (hypS (A $\vee$ B) $\to$ concS C)\\
-\quad | cutS : concS A $\to$ (hypS A $\to$ concS C) $\to$ concS C\\
-\quad | $\otimes$R0S : hypS A $\to$ hypS B $\to$ concS (A $\otimes$ B)\\
-\quad | $\otimes$LS : (hypS A $\to$ hypS B $\to$ concS C) $\to$ (hypS (A $\otimes$ B) $\to$ concS C)\\
-\quad | unitRS : concS unit\\
-\quad | unitLS : concS C $\to$ (hypS unit $\to$ concS C)\\
-;
-\end{frame}
 \begin{frame} {Related Work}
     \begin{itemize}
         \item Francalaza et. al\cite{FrancalanzaTP24} Presents an implementation of the message-passing interpretation of SAX in Go. Instead of focusing on a pure implementation, we focus on a mechanization of the meta-theoretic properties.
@@ -164,4 +141,27 @@ LF concS : o $\to$ type =\\[4pt]
 \bibliographystyle{plain}
 \bibliography{main}
 
+\begin{frame}
+  \scriptsize
+\ttfamily
+
+LF hypS : o $\to$ type = ;\\
+LF concS : o $\to$ type =\\[4pt]
+
+\quad | initialS : (hypS A $\to$ concS A)\\
+\quad | \&RS : concS A $\to$ concS B $\to$ concS (A \& B)\\
+\quad | \&L01S : hypS (A \& B) $\to$ concS A\\
+\quad | \&L02S : hypS (A \& B) $\to$ concS B\\
+\quad | $\supset$RS : (hypS A $\to$ concS B) $\to$ concS (A $\supset$ B)\\
+\quad | $\supset$L0S : hypS A $\to$ hypS (A $\supset$ B) $\to$ concS B\\
+\quad | $\vee$R01S : hypS A $\to$ concS (A $\vee$ B)\\
+\quad | $\vee$R02S : hypS B $\to$ concS (A $\vee$ B)\\
+\quad | $\vee$LS : (hypS A $\to$ concS C) $\to$ (hypS B $\to$ concS C) $\to$ (hypS (A $\vee$ B) $\to$ concS C)\\
+\quad | cutS : concS A $\to$ (hypS A $\to$ concS C) $\to$ concS C\\
+\quad | $\otimes$R0S : hypS A $\to$ hypS B $\to$ concS (A $\otimes$ B)\\
+\quad | $\otimes$LS : (hypS A $\to$ hypS B $\to$ concS C) $\to$ (hypS (A $\otimes$ B) $\to$ concS C)\\
+\quad | unitRS : concS unit\\
+\quad | unitLS : concS C $\to$ (hypS unit $\to$ concS C)\\
+;
+\end{frame}
 \end{document}
