@@ -1,0 +1,19 @@
+# LaTeX
+*.aux
+*.bbl
+*.blg
+*.log
+*.out
+*.toc
+*.fls
+
+# Emacs
+*~
+\#*\#
+.\#*
+
+# VS Code
+.vscode
+
+# macOS
+.DS_Store
