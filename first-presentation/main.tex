@@ -118,29 +118,6 @@ $\mathtt{cell}(c, \_)$
     \end{itemize}
 \end{frame}
 
-\begin{frame} {Related Work}
-    \begin{itemize}
-        \item Francalaza et. al\cite{FrancalanzaTP24} Presents an implementation of the message-passing interpretation of SAX in Go. Instead of focusing on a pure implementation, we focus on a mechanization of the meta-theoretic properties.
-        \item Zhang et al.\cite{zhang2025} gives a mechanization of logical relations for message passing protocols in Coq.
-        \item DeYoung et al.\cite{DeYoungP23} presents several metatheoretic proofs for SNAX, including type-safety.
-    \end{itemize}
-
-\end{frame}
-
-\begin{frame}{Timeline}
-  \begin{itemize}
-    \item Mechanize statics and dynamics - March 13th
-    \item Mechanize subformula property, begin slides - March 18th
-    \item Mechanize Admissibility of cut, cut-elimination, begin initial stages of writeup - March 25th
-    \item Finish slides - April 4th
-    \item Mechanize type preservation, confluence, Progress - April 10th
-    \item Mechanize termination, SNAX, finish writeup - mid April
-  \end{itemize} 
-\end{frame}
-
-\bibliographystyle{plain}
-\bibliography{main}
-
 \begin{frame}
   \scriptsize
 \ttfamily
@@ -164,4 +141,27 @@ LF concS : o $\to$ type =\\[4pt]
 \quad | unitLS : concS C $\to$ (hypS unit $\to$ concS C)\\
 ;
 \end{frame}
+\begin{frame} {Related Work}
+    \begin{itemize}
+        \item Francalaza et. al\cite{FrancalanzaTP24} Presents an implementation of the message-passing interpretation of SAX in Go. Instead of focusing on a pure implementation, we focus on a mechanization of the meta-theoretic properties.
+        \item Zhang et al.\cite{zhang2025} gives a mechanization of logical relations for message passing protocols in Coq.
+        \item DeYoung et al.\cite{DeYoungP23} presents several metatheoretic proofs for SNAX, including type-safety.
+    \end{itemize}
+
+\end{frame}
+
+\begin{frame}{Timeline}
+  \begin{itemize}
+    \item Mechanize statics and dynamics - March 13th
+    \item Mechanize subformula property, begin slides - March 18th
+    \item Mechanize Admissibility of cut, cut-elimination, begin initial stages of writeup - March 25th
+    \item Finish slides - April 4th
+    \item Mechanize type preservation, confluence, Progress - April 10th
+    \item Mechanize termination, SNAX, finish writeup - mid April
+  \end{itemize} 
+\end{frame}
+
+\bibliographystyle{plain}
+\bibliography{main}
+
 \end{document}
