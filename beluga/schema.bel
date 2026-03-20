@@ -1,0 +1,14 @@
+schema ctx = hyp a;
+schema ctxS = hypS a;
+
+inductive rel-ctx-S : {Γ : ctx} {Γ' : ctxS} ctype =
+  | nil-S :  rel-ctx-S [] []
+  | cons-S : rel-ctx-S [Γ] [Γ']
+	     → rel-ctx-S [Γ, x:hyp a[]] [Γ', x : hypS a[]]
+;
+
+inductive rel-S-ctx : {Γ' : ctxS} {Γ : ctx} ctype =
+  | S-nil :  rel-S-ctx [] []
+  | S-cons : rel-S-ctx [Γ'] [Γ]
+	     → rel-S-ctx [Γ', x:hypS a[]] [Γ, x : hyp a[]]
+;
