@@ -1,57 +1,147 @@
+% Translations between G3 and SAX
+
+% ------------------------------------------------------------------------------
+% SAX → G3
+% ------------------------------------------------------------------------------
+
 rec hyp2hypS : rel-ctx-S [Γ] [Γ'] → [Γ ⊢ hyp A[]] → [Γ' ⊢ hypS A[]] =
 / total 1 /
 fn R h ⇒
 case R of
   | nil-S ⇒ impossible h
   | cons-S R' ⇒ (
-	case h of
-	  | [Γ0, a: hyp A[] ⊢ a] ⇒ [_ , a: hypS A[] ⊢ a]
-	  | [Γ0, a: hyp A[] ⊢ #q[..]] ⇒
-		let [Δ0 ⊢ M] = hyp2hypS R' [Γ0 ⊢ #q] in
-		[Δ0, a:hypS A[] ⊢ M[..]]
-	)
+    case h of
+      | [Γ0, a: hyp A[] ⊢ a] ⇒ [_ , a: hypS A[] ⊢ a]
+      | [Γ0, a: hyp A[] ⊢ #q[..]] ⇒
+        let [Δ0 ⊢ M] = hyp2hypS R' [Γ0 ⊢ #q] in
+        [Δ0, a:hypS A[] ⊢ M[..]]
+    )
 ;
 
-
-rec seq2sax :  (A : [⊢ o]) rel-ctx-S [Γ] [Γ']
-	       → [Γ ⊢ conc A[]] → [Γ' ⊢ concS A[]] =
+rec seq2sax : (A : [⊢ o]) rel-ctx-S [Γ] [Γ']
+              → [Γ ⊢ conc A[]] → [Γ' ⊢ concS A[]] =
 / total 2 /
 fn R D ⇒
 case D of
   | [Γ ⊢ unitR] ⇒ [_ ⊢ unitRS ]
-  | [Γ ⊢ unitL c H] ⇒ let [Γ' ⊢ HS] = hyp2hypS R [Γ ⊢ H] in
-		      let [Γ' ⊢ cS] = seq2sax R [Γ ⊢ c] in
-		      [Γ' ⊢ unitLS cS HS]
-  | [Γ  ⊢ initial h] ⇒ let [Γ' ⊢ hS] = hyp2hypS R [Γ ⊢ h] in
-		       [Γ' ⊢ initialS hS]
-  | [Γ ⊢ &R c1 c2] ⇒ let [Γ' ⊢ c1S] = seq2sax R [Γ ⊢ c1] in
-		     let [Γ' ⊢ c2S] = seq2sax R [Γ ⊢ c2] in
-		     [Γ' ⊢ &RS c1S c2S]
-	 | [Γ ⊢ (&L1 (\h. c)) H] ⇒ let [Γ' ⊢ HS] = hyp2hypS R [Γ ⊢ H] in
-				   let [Γ', x : hypS A[] ⊢ cS] = seq2sax (cons-S R) [Γ, x : hyp _ ⊢ c] in
-				   [Γ' ⊢ cutS (&L01S HS) (\h. cS)]
-	 | [Γ ⊢ (&L2 (\h. c)) H] ⇒ let [Γ' ⊢ HS] = hyp2hypS R [Γ ⊢ H] in
-				   let [Γ', x : hypS B[] ⊢ cS] = seq2sax (cons-S R) [Γ, x : hyp _ ⊢ c] in
-				   [Γ' ⊢ cutS (&L02S HS) (\h. cS)]
-	 | [Γ ⊢ ⊃R (\h. c)] ⇒ let [Γ', x : hypS _ ⊢ cS] = seq2sax (cons-S R) [Γ, x : hyp _  ⊢ c] in
-			      [Γ' ⊢ ⊃RS (\h. cS)]
-	 | [Γ ⊢ ⊃L c1 (\h. c2) H] ⇒ let [Γ' ⊢ HS] = hyp2hypS R [Γ ⊢ H] in
-				    let [Γ' ⊢ c1S] = seq2sax R [Γ ⊢ c1] in
-				    let [Γ', x : hypS B[] ⊢ c2S] = seq2sax (cons-S R) [Γ, x : hyp _ ⊢ c2] in
-				    [Γ' ⊢ cutS (cutS c1S (\h. ⊃L0S h HS[..])) (\h. c2S)]
-	 | [Γ ⊢ ∨R1 c] ⇒ let [Γ' ⊢ cS] = seq2sax R [Γ ⊢ c] in
-			 [Γ' ⊢ cutS cS ∨R01S]
-	 | [Γ ⊢ ∨R2 c] ⇒ let [Γ' ⊢ cS] = seq2sax R [Γ ⊢ c] in
-			 [Γ' ⊢ cutS cS ∨R02S]
-	 | [Γ ⊢ ∨L (\h1. c1) (\h2. c2) H] ⇒ let [Γ' ⊢ HS] = hyp2hypS R [Γ ⊢ H] in
-					    let [Γ', h1 : hypS A[] ⊢ c1S] = seq2sax (cons-S R) [Γ, h1 : hyp _ ⊢ c1] in
-					    let [Γ', h2 : hypS B[] ⊢ c2S] = seq2sax (cons-S R) [Γ, h2 : hyp _ ⊢ c2] in
-					    [Γ' ⊢ ∨LS (\h1. c1S) (\h2. c2S) HS]
-	 | [Γ ⊢ ⊗R c1 c2] ⇒  let [Γ' ⊢ c1S] = seq2sax R [Γ ⊢ c1] in
-			     let [Γ' ⊢ c2S] = seq2sax R [Γ ⊢ c2] in
-			     [Γ' ⊢ cutS c1S (\h1. cutS c2S[..] (\h2. ⊗R0S h1 h2))]
-	 | [Γ ⊢ ⊗L (\h1. \h2. c) H] ⇒ let [Γ' ⊢ HS] = hyp2hypS R [Γ ⊢ H] in
-				      let [Γ', h1: hypS A[], h2:hypS B[] ⊢ cS]
-				      = seq2sax (cons-S (cons-S R)) [Γ, h1 : hyp _, h2 : hyp _  ⊢ c] in
-				      [Γ' ⊢ ⊗LS (\h1. \h2. cS) HS]
+  | [Γ ⊢ unitL c H] ⇒
+        let [Γ' ⊢ HS] = hyp2hypS R [Γ ⊢ H] in
+        let [Γ' ⊢ cS] = seq2sax R [Γ ⊢ c] in
+        [Γ' ⊢ unitLS cS HS]
+  | [Γ  ⊢ initial h] ⇒
+        let [Γ' ⊢ hS] = hyp2hypS R [Γ ⊢ h] in
+        [Γ' ⊢ initialS hS]
+  | [Γ ⊢ &R c1 c2] ⇒
+        let [Γ' ⊢ c1S] = seq2sax R [Γ ⊢ c1] in
+        let [Γ' ⊢ c2S] = seq2sax R [Γ ⊢ c2] in
+        [Γ' ⊢ &RS c1S c2S]
+  | [Γ ⊢ (&L1 (\h. c)) H] ⇒
+        let [Γ' ⊢ HS] = hyp2hypS R [Γ ⊢ H] in
+        let [Γ', x : hypS A[] ⊢ cS] = seq2sax (cons-S R) [Γ, x : hyp _ ⊢ c] in
+        [Γ' ⊢ cutS (&L01S HS) (\h. cS)]
+  | [Γ ⊢ (&L2 (\h. c)) H] ⇒
+        let [Γ' ⊢ HS] = hyp2hypS R [Γ ⊢ H] in
+        let [Γ', x : hypS B[] ⊢ cS] = seq2sax (cons-S R) [Γ, x : hyp _ ⊢ c] in
+        [Γ' ⊢ cutS (&L02S HS) (\h. cS)]
+  | [Γ ⊢ ⊃R (\h. c)] ⇒
+        let [Γ', x : hypS _ ⊢ cS] = seq2sax (cons-S R) [Γ, x : hyp _  ⊢ c] in
+        [Γ' ⊢ ⊃RS (\h. cS)]
+  | [Γ ⊢ ⊃L c1 (\h. c2) H] ⇒
+        let [Γ' ⊢ HS] = hyp2hypS R [Γ ⊢ H] in
+        let [Γ' ⊢ c1S] = seq2sax R [Γ ⊢ c1] in
+        let [Γ', x : hypS B[] ⊢ c2S] = seq2sax (cons-S R) [Γ, x : hyp _ ⊢ c2] in
+        [Γ' ⊢ cutS (cutS c1S (\h. ⊃L0S h HS[..])) (\h. c2S)]
+  | [Γ ⊢ ∨R1 c] ⇒
+        let [Γ' ⊢ cS] = seq2sax R [Γ ⊢ c] in
+        [Γ' ⊢ cutS cS ∨R01S]
+  | [Γ ⊢ ∨R2 c] ⇒
+        let [Γ' ⊢ cS] = seq2sax R [Γ ⊢ c] in
+        [Γ' ⊢ cutS cS ∨R02S]
+  | [Γ ⊢ ∨L (\h1. c1) (\h2. c2) H] ⇒
+        let [Γ' ⊢ HS] = hyp2hypS R [Γ ⊢ H] in
+        let [Γ', h1 : hypS A[] ⊢ c1S]
+            = seq2sax (cons-S R) [Γ, h1 : hyp _ ⊢ c1] in
+        let [Γ', h2 : hypS B[] ⊢ c2S]
+            = seq2sax (cons-S R) [Γ, h2 : hyp _ ⊢ c2] in
+        [Γ' ⊢ ∨LS (\h1. c1S) (\h2. c2S) HS]
+  | [Γ ⊢ ⊗R c1 c2] ⇒
+        let [Γ' ⊢ c1S] = seq2sax R [Γ ⊢ c1] in
+        let [Γ' ⊢ c2S] = seq2sax R [Γ ⊢ c2] in
+        [Γ' ⊢ cutS c1S (\h1. cutS c2S[..] (\h2. ⊗R0S h1 h2))]
+  | [Γ ⊢ ⊗L (\h1. \h2. c) H] ⇒
+        let [Γ' ⊢ HS] = hyp2hypS R [Γ ⊢ H] in
+        let [Γ', h1: hypS A[], h2:hypS B[] ⊢ cS]
+            = seq2sax (cons-S (cons-S R)) [Γ, h1 : hyp _, h2 : hyp _  ⊢ c] in
+        [Γ' ⊢ ⊗LS (\h1. \h2. cS) HS]
+;
+
+
+% ------------------------------------------------------------------------------
+% G3 → SAX
+% ------------------------------------------------------------------------------
+
+rec hypS2hyp : rel-S-ctx [Γ'] [Γ] → [Γ' ⊢ hypS A[]] → [Γ ⊢ hyp A[]] =
+/ total 1 /
+fn R h ⇒ case R of
+  | S-nil ⇒ impossible h
+  | S-cons R' ⇒
+      case h of
+        | [Γ0', a : hypS A[] ⊢ a] ⇒ [_, a : hyp A[] ⊢ a]
+        | [Γ0', a : hypS A[] ⊢ #q[..]] ⇒
+              let [Δ0 ⊢ M] = hypS2hyp R' [Γ0' ⊢ #q] in
+              [Δ0, a : hyp A[] ⊢ M[..]]
+;
+
+rec sax2seq : (A : [⊢ o]) rel-S-ctx [Γ'] [Γ]
+              → [Γ' ⊢ concS A[]] → [Γ ⊢ conc A[]] =
+/ total 2 /
+fn R D ⇒
+case D of
+  | [Γ' ⊢ unitRS] ⇒ [_ ⊢ unitR]
+  | [Γ' ⊢ unitLS cS HS] ⇒
+        let [Γ ⊢ c] = sax2seq R [Γ' ⊢ cS] in
+        let [Γ ⊢ H] = hypS2hyp R [Γ' ⊢ HS] in
+        [Γ ⊢ unitL c H]
+  | [Γ'  ⊢ initialS hS] ⇒
+        let [Γ ⊢ h] = hypS2hyp R [Γ' ⊢ hS] in
+        [Γ ⊢ initial h]
+  | [Γ' ⊢ &RS c1S c2S] ⇒
+        let [Γ ⊢ c1] = sax2seq R [Γ' ⊢ c1S] in
+        let [Γ ⊢ c2] = sax2seq R [Γ' ⊢ c2S] in
+        [Γ ⊢ &R c1 c2]
+  | [Γ' ⊢ &L01S HS] ⇒
+        let [Γ ⊢ H] = hypS2hyp R [Γ' ⊢ HS] in
+        [Γ ⊢ &L1 (\h. initial h) H]
+  | [Γ' ⊢ &L02S HS] ⇒
+        let [Γ ⊢ H] = hypS2hyp R [Γ' ⊢ HS] in
+        [Γ ⊢ &L2 (\h. initial h) H]
+  | [Γ' ⊢ ⊃RS (\hS. cS)] ⇒
+        let [Γ, x : hyp A[] ⊢ c] = sax2seq (S-cons R) [Γ', x : hypS _ ⊢ cS] in
+        [Γ ⊢ ⊃R (\h. c)]
+  | [Γ' ⊢ ⊃L0S HS1 HS2] ⇒
+        let [Γ ⊢ H1] = hypS2hyp R [Γ' ⊢ HS1] in
+        let [Γ ⊢ H2] = hypS2hyp R [Γ' ⊢ HS2] in
+        [Γ ⊢ ⊃L (initial H1) (\h. initial h) H2]
+  | [Γ' ⊢ ∨R01S HS] ⇒
+        let [Γ ⊢ H] = hypS2hyp R [Γ' ⊢ HS] in
+        [Γ ⊢ ∨R1 (initial H)]
+  | [Γ' ⊢ ∨R02S HS] ⇒
+        let [Γ ⊢ H] = hypS2hyp R [Γ' ⊢ HS] in
+        [Γ ⊢ ∨R2 (initial H)]
+  | [Γ' ⊢ ∨LS (\h1. c1S) (\h2. c2S) HS] ⇒
+        let [Γ, h1: hyp A[] ⊢ c1] = sax2seq (S-cons R) [Γ', h1: hypS _ ⊢ c1S] in
+        let [Γ, h2: hyp B[] ⊢ c2] = sax2seq (S-cons R) [Γ', h2: hypS _ ⊢ c2S] in
+        let [Γ ⊢ H] = hypS2hyp R [Γ' ⊢ HS] in
+        [Γ ⊢ ∨L (\h1. c1) (\h2. c2) H]
+  | [Γ' ⊢ ⊗R0S HS1 HS2] ⇒
+        let [Γ ⊢ H1] = hypS2hyp R [Γ' ⊢ HS1] in
+        let [Γ ⊢ H2] = hypS2hyp R [Γ' ⊢ HS2] in
+        [Γ ⊢ ⊗R (initial H1) (initial H2)]
+  | [Γ' ⊢ ⊗LS (\h1. \h2. cS) HS] ⇒
+        let [Γ, h1 : hyp A[], h2 : hyp B[] ⊢ c]
+            = sax2seq (S-cons (S-cons R)) [Γ', h1 : hypS _, h2 : hypS _ ⊢ cS] in
+        let [Γ ⊢ H] = hypS2hyp R [Γ' ⊢ HS] in
+        [Γ ⊢ ⊗L (\h1. \h2. c) H]
+
+  | [Γ' ⊢ cutS cS (\h. dS)] ⇒ ? % TODO
 ;
