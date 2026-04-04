@@ -1,0 +1,87 @@
+LF lhyp : o → type = ;
+
+%% Predicates over hypothesis variables, in the style of Crary.
+%% elig h  means h is eligible (x* in the paper)
+%% irrel h means h is irrelevant (x⁰ in the paper)
+LF elig  : lhyp A → type = ;
+LF irrel : lhyp A → type = ;
+
+%% The three axiom rules whose conclusions are starred.
+LF lconcS* : o → type =
+
+  %% Γ⁰, y*:A, x:A⊃B ⊢ z*:B
+  | ⊃lL0S  : {h1 : lhyp A} {h2 : lhyp (A ⊃ B)}
+	     elig h1 → irrel h2
+	     → lconcS* B
+
+  %% Γ⁰, x:A&B ⊢ y*:A
+  | &lL01S : {h : lhyp (A & B)}
+	     irrel h
+	     → lconcS* A
+
+  %% Γ⁰, x:A&B ⊢ z*:B
+  | &lL02S : {h : lhyp (A & B)}
+	     irrel h
+	     → lconcS* B
+;
+
+LF lconcS : o → type =
+
+  %% Γ⁰, x:A ⊢ y:A     (x is irrelevant side formula)
+  | linitialS : {h : lhyp A} irrel h
+		→ lconcS A
+
+  %% Γ ⊢ x:A    Γ, x:A ⊢ z:C
+  | lcutS     : lconcS A
+		→ (lhyp A → lconcS C)
+		→ lconcS C
+
+  %% Γ ⊢ x*:A    Γ, x:A ⊢ z:C
+  | lsnip1S   : lconcS* A
+		→ (lhyp A → lconcS C)
+		→ lconcS C
+
+  %% Γ ⊢ x:A    Γ, x*:A ⊢ z:C
+  | lsnip2S   : lconcS A
+		→ ({h : lhyp A} elig h → lconcS C)
+		→ lconcS C
+
+  %% Γ, y:A ⊢ z:B
+  | ⊃lRS      : (lhyp A → lconcS B)
+		→ lconcS (A ⊃ B)
+
+  %% Γ⁰, y*:A, z*:B ⊢ x:A⊗B
+  | ⊗lR0S     : {h1 : lhyp A} {h2 : lhyp B}
+		elig h1 → elig h2
+		→ lconcS (A ⊗ B)
+
+  %% Γ, x:A⊗B, y:A, z:B ⊢ w:C
+  | ⊗lLS      : (lhyp A → lhyp B → lconcS C)
+		→ lhyp (A ⊗ B)
+		→ lconcS C
+
+  %% Γ⁰ ⊢ x:1
+  | unitlR0S  : lconcS unit
+
+  %% Γ ⊢ w:C     (x:1 is irrelevant side formula)
+  | unitlLS   : ({h : lhyp unit} irrel h → lconcS C)
+		→ lconcS C
+
+  %% Γ ⊢ y:A    Γ ⊢ z:B
+  | &lRS      : lconcS A → lconcS B
+		→ lconcS (A & B)
+
+  %% Γ⁰, x*:A ⊢ z:A∨B
+  | ∨lR01S    : {h : lhyp A} elig h
+		→ lconcS (A ∨ B)
+
+  %% Γ⁰, y*:B ⊢ z:A∨B
+  | ∨lR02S    : {h : lhyp B} elig h
+		→ lconcS (A ∨ B)
+
+  %% Γ, z:A∨B, x:A ⊢ w:C    Γ, z:A∨B, y:B ⊢ w:C
+  | ∨lLS      : (lhyp A → lconcS C)
+		→ (lhyp B → lconcS C)
+		→ lhyp (A ∨ B)
+		→ lconcS C
+;
