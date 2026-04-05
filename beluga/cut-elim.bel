@@ -1,0 +1,7 @@
+rec cut-elimS :  {Γ: mctxS} {A: [⊢ o]}  [Γ ⊢ mconcS A[]] → [Γ, x:mhypS A[] ⊢ mconcS C[]] → [Γ ⊢ mconcS C[]] =
+/ total 1 /  
+mlam Γ  ⇒ fn D ⇒ fn E ⇒
+    case [⊢ A] of
+      |_ ⇒ ?
+
+;
