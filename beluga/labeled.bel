@@ -85,3 +85,34 @@ LF lconcS : o → type =
 		→ lhyp (A ∨ B)
 		→ lconcS C
 ;
+
+% Mini labeled system: implication only
+
+LF mlhypS : o → type = ;
+
+LF melig  : mlhypS A → type = ;
+LF mirrel : mlhypS A → type = ;
+
+% Starred conclusions
+LF mlconcS* : o → type =
+  | m⊃lL0S : {h1 : mlhypS A} {h2 : mlhypS (A ⊃ B)}
+             melig h1 → mirrel h2
+             → mlconcS* B
+;
+
+% Regular conclusions
+LF mlconcS : o → type =
+  | mlinitialS : {h : mlhypS A} mirrel h
+                 → mlconcS A
+                 
+  | mlsnip1S : mlconcS* A
+               → (mlhypS A → mlconcS C)
+               → mlconcS C
+
+  | mlsnip2S : mlconcS A
+               → ({h : mlhypS A} melig h → mlconcS C)
+               → mlconcS C
+
+  | m⊃lRS : (mlhypS A → mlconcS B)
+             → mlconcS (A ⊃ B)
+;
