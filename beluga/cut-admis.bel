@@ -1,0 +1,84 @@
+rec mcut-admis : {Γ: mlctx} {A: [⊢ o]} [Γ ⊢ mlconcS A[]] → [Γ, x:mlhypS A[] ⊢ mlconcS C[]] → [Γ ⊢ mlconcS C[]] =
+mlam Γ ⇒ mlam A ⇒ fn D ⇒ fn E ⇒
+    case D of
+      | [Γ ⊢ mlinitialS h i] ⇒ 
+          let [Γ, x:mlhypS _ ⊢ eS] = E in
+          [Γ ⊢ eS[.., h]]
+
+      | [Γ ⊢ m⊃lRS (\h. d)] ⇒ (case E of 
+        | [Γ, x: mlhypS (B ⊃ C)  ⊢ mlinitialS h i] ⇒ [Γ ⊢ mlsnip2S (D) (mlinitialS h i)] 
+            
+
+        | [Γ, x: mlhypS (B ⊃ C) ⊢ m⊃lRS (\h. d)] ⇒ ? 
+
+        | [Γ, x: mlhypS (B ⊃ C) ⊢ mlsnip1S d* (\h. e)] ⇒ ?
+
+        | [Γ, x: mlhypS (B ⊃ C) ⊢ mlsnip2S d (\h. \e. d')] ⇒ ?
+
+    ) 
+      | [Γ ⊢ mlsnip1S d* (\h. e)] ⇒ ?
+
+      | [Γ ⊢ mlsnip2S d (\h. \e. d')] ⇒ ?
+;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+%{ rec cut-elimS : {Γ: mctxS} {A: [⊢ o]} [Γ ⊢ mconcS A[]] → [Γ, x:mhypS A[] ⊢ mconcS C[]] → [Γ ⊢ mconcS C[]] =
+mlam Γ ⇒ mlam A ⇒ fn D ⇒ fn E ⇒
+    case D of
+      % Variable case
+      | [Γ ⊢ minitialS hS] ⇒ let [Γ, x:mhypS a[] ⊢ eS] = E in [Γ ⊢ eS[.., hS]] 
+
+      % Right rules 
+      | [Γ ⊢ munitRS] ⇒ 
+        (case E of 
+            | [Γ, x:mhypS unit ⊢ minitialS x] ⇒ [Γ ⊢ munitRS]
+
+            | [Γ, x:mhypS unit ⊢ munitLS cS x] ⇒
+                cut-elimS [Γ] [⊢ unit] [Γ ⊢ munitRS] [Γ, x:mhypS unit ⊢ cS]
+
+            | [Γ, x:mhypS unit ⊢ m⊃RS (\h. d)] ⇒ let  [Γ, h:mhypS _ ⊢ r] = cut-elimS [Γ, h:mhypS _] [⊢ unit] [Γ, h:mhypS _ ⊢ munitRS] [Γ, h:mhypS _, x:mhypS unit ⊢ d[.., x, h]] in
+                [Γ ⊢ m⊃RS (\h. r)]                           
+
+            | [Γ, x:mhypS unit ⊢ m⊗R0S HS1[..] HS2[..]] ⇒ [Γ ⊢ m⊗R0S HS1 HS2 ]
+
+            | [Γ, x:mhypS unit  ⊢ m⊃L0S d1[..] d2[..]] ⇒ [Γ ⊢ m⊃L0S d1 d2]                            
+
+            | [Γ, x:mhypS unit ⊢ m⊗LS (\h1. \h2. cS) HS[..]] ⇒ let [Γ, y1:mhypS _, y2:mhypS _ ⊢ r] = cut-elimS [Γ, y1:mhypS _, y2:mhypS _] [⊢ unit] [Γ, y1:mhypS _, y2:mhypS _ ⊢ munitRS] [Γ, y1:mhypS _, y2:mhypS _ , x:mhypS unit ⊢ cS[.., x, y1, y2]] in
+            [Γ ⊢ m⊗LS (\h1. \h2. r) HS ]      
+
+            | [Γ, x:mhypS unit ⊢ munitLS cS HS] ⇒ ?                    
+        )                             
+      | [Γ ⊢ m⊃RS (\h. d)] ⇒ ?                           
+      | [Γ ⊢ m⊗R0S HS1 HS2] ⇒ ?                   
+
+      % Left rules 
+      | [Γ ⊢ m⊃L0S d1 d2] ⇒ ?                            % uses ⊃ hyp from Γ
+      | [Γ ⊢ m⊗LS (\h1. \h2. cS) HS] ⇒ ?             % uses ⊗ hyp from Γ
+      | [Γ ⊢ munitLS cS HS] ⇒ ?                      % uses unit hyp from Γ
+
+;
+}%

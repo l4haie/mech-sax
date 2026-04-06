@@ -1,5 +1,7 @@
 schema ctx = hyp a;
 schema ctxS = hypS a;
+schema mctxS = mhypS a;
+schema mlctx = mlhypS a;
 
 inductive rel-ctx-S : {Γ : ctx} {Γ' : ctxS} ctype =
   | nil-S :  rel-ctx-S [] []
