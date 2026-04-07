@@ -187,17 +187,22 @@ $\mathtt{cell}(c, \_)$
 
 \begin{frame}{Mechanizing SAX}
 
-  Concrete thoughts so far:
     \begin{itemize}
       \item $G_3$ and Theorems 1 and 2 (cut elim. $G_3$) $\checkmark$ (Pfenning 2000) \textcolor{red}{In LF, not Beluga}
-      \item SAX $\checkmark$ , Theorem 3 (translation) should follow
-      \item Eligibility for snips as well-formedness predicate (a la linearity predicate)
-      \item Choosing one of Theorem 4 or 6 (cut elim. in SAX)? Theorem 5 (admiss.) proof looks complicated
-      \item Metatheoretic properties look standard
+      \item SAX $\checkmark$ , Theorem 3 (translation) $\checkmark$
+      \item miniSAX as a subset with $\supset$ only \checkmark) (possibility: extend to $\otimes$)
+      \item Eligibility for snips as well-formedness predicate (a la linearity predicate) $\checkmark$
+      \item Theorem 5 (cut admissibility) $\checkmark$, Theorem 6 (cut eligibility) should follow
+      \item \textcolor{red}{Remaining:} Theorem 7 (Subformula property), configurations required for preservation, progress, etc.
     \end{itemize}
 \end{frame}
 
 \begin{frame}
+
+\begin{itemize}
+      \item SAX $\checkmark$ , Theorem 3 (translation) $\checkmark$
+\end{itemize}
+
   \scriptsize
 \ttfamily
 
@@ -219,7 +224,151 @@ LF concS : o $\to$ type =\\[4pt]
 \quad | unitRS : concS unit\\
 \quad | unitLS : concS C $\to$ (hypS unit $\to$ concS C)\\
 ;
+
+rec seq2sax : (A : [$\vdash$ o]) rel-ctx-S [$\Gamma$] [$\Gamma'$]
+              → [$\Gamma \vdash$ conc A[]] → [$\Gamma' \vdash$ concS A[]] = ...
 \end{frame}
+
+\begin{frame}
+
+
+\begin{itemize}
+    \item  miniSAX as a subset with $\supset$ only \checkmark) (possibility: extend to $\otimes$)
+\end{itemize}
+
+ { \scriptsize
+\ttfamily
+
+LF mhypS : mo $\to$ type = ;\\
+LF mconcS : mo $\to$ type =\\[4pt]
+
+\quad | minitialS : (mhypS A $\to$ mconcS A)\\
+\quad | m$\supset$RS : (mhypS A $\to$ mconcS B) $\to$ mconcS (A $\supset$ B)\\
+\quad | m$\supset$L0S : mhypS A $\to$ mhypS (A $\supset$ B) $\to$ cmoncS B\\
+\quad | mcutS : mconcS A $\to$ (mhypS A $\to$ mconcS C) $\to$ mconcS C\\
+
+;}
+
+\pause
+
+Require some way to discuss snips (eligibility) and get rid of $\texttt{mcutS}$ for cut admissability...
+
+
+\end{frame}
+
+
+\begin{frame}{}
+\begin{itemize}
+    \item Eligibility for snips as well-formedness predicate (a la linearity predicate) $\checkmark$ 
+\end{itemize}
+
+\begin{columns}
+
+% LEFT COLUMN (your code)
+\begin{column}{0.48\textwidth}
+
+\scriptsize
+\ttfamily
+
+LF mlhypS : mo $\to$ type = ;\\
+LF melig : mlhypS A $\to$ type = ;\\[4pt]
+
+LF mlconcS* : mo $\to$ type =\\[2pt]
+
+\quad \textcolor{blue}{| m$\supset$lL0S : \{h1 : mlhypS A\} \{h2 : mlhypS (A $\supset$ B)\}\\
+\quad\quad melig h1 $\to$ mlconcS* B\\[6pt]}
+
+LF mlconcS : mo $\to$ type =\\[2pt]
+
+\quad | mlinitialS : \{h : mlhypS A\} $\to$ mlconcS A\\[2pt]
+
+\quad \textcolor{red}{| mlsnip1S : mlconcS* A $\to$ (mlhypS A $\to$ mlconcS C) $\to$ mlconcS C\\[2pt]}
+
+\quad \textcolor{green}{| mlsnip2S : mlconcS A $\to$ (\{h : mlhypS A\} melig h $\to$ mlconcS C) $\to$ mlconcS C\\[2pt]}
+
+\quad | m$\supset$lRS : (mlhypS A $\to$ mlconcS B) $\to$ mlconcS (A $\supset$ B)\\[2pt]
+
+\quad | mlconcS/* : mlconcS* A $\to$ mlconcS A\\
+
+;
+
+\end{column}
+
+% RIGHT COLUMN (empty for now)
+\begin{column}{0.48\textwidth}
+
+% Put your other content here
+$$\infer[\textcolor{blue}{\supset L^0}]{\Gamma^0, y^* : A, x : A \supset B \vdash z^* : B}{}$$
+
+$$\infer[\textcolor{red}{\textrm{Snip}^1_A}]{\Gamma \vdash z : C}{\Gamma \vdash x^* : A & \Gamma, x : A \vdash y : C}$$
+
+$$\infer[\textcolor{green}{\textrm{Snip}^1_A}]{\Gamma \vdash z : C}{\Gamma \vdash x : A & \Gamma, x^*: A \vdash y : C}$$
+\end{column}
+
+\end{columns}
+
+\end{frame}
+
+\begin{frame}{}
+    \begin{itemize}
+        \item Theorem 5 (cut admissibility) $\checkmark$, Theorem 6 (cut eligibility) should follow
+    \end{itemize}
+
+    \begin{columns}
+        \begin{column}{0.48\linewidth}
+           
+\scriptsize
+\ttfamily
+
+rec mcut-admis : \{$\Gamma$: mlctx\} \{A: [$\vdash$ mo]\}\\
+\quad [$\Gamma \vdash$ mlconcS A[]]\\
+\quad $\to$ [$\Gamma$, x:mlhypS A[] $\vdash$ mlconcS C[]]\\
+\quad $\to$ [$\Gamma \vdash$ mlconcS C[]] =\\[4pt]
+
+/ total 1 /\\[4pt]
+
+mlam $\Gamma$ ⇒ mlam A ⇒ fn D ⇒ fn E ⇒\\
+case (D, E) of\\[4pt]
+
+\quad $\dots$\\[4pt]
+
+\quad | ([$\Gamma \vdash$ D], [$\Gamma$, x : mlhypS A[] $\vdash$ m$\supset$lRS (\textbackslash h.\ B)]) ⇒\\[4pt]
+
+\quad\quad let [$\Gamma$, z : mlhypS \_ $\vdash$ F] = mcut-admis \_ \_\\
+\quad\quad\quad [$\Gamma$, z : mlhypS \_ $\vdash$ D[..]]\\
+\quad\quad\quad [$\Gamma$, z : mlhypS \_, x : mlhypS A[] $\vdash$ B[..,z]]\\
+\quad\quad in\\[4pt]
+
+\quad\quad [$\Gamma \vdash$ m$\supset$lRS (\textbackslash h.\ F[..,h])]\\[4pt]
+
+\quad $\dots$\\
+
+;
+        \end{column}
+
+        \begin{column}{0.48\linewidth}
+            \resizebox{\linewidth}{!}{$$\infer[\textrm{Cut}_A]{\Gamma \vdash C_1 \supset C_2}{\deduce{\Gamma \vdash x : A}{\mathcal{D}} & 
+            \infer[\supset R]{\Gamma, x : A \vdash z : C_1 \supset C_2}{\deduce{\Gamma, x : A, z_1 : C_1 \vdash z_2 : C_2}{\mathcal{E}}}}$$}
+            
+            $$\Longrightarrow$$
+            \resizebox{\linewidth}{!}{
+            $$\infer[\supset R]{\Gamma \vdash z : C_1 \supset C_2}{\infer[IH]{\Gamma, z_1 : C_1 \vdash z_2 : C_2}{\deduce{
+            \Gamma, z_1^0 : C_1 \vdash x : A}{\mathcal{D} + \{z_0^1 : C_1\}}
+            &\deduce{
+            \Gamma, x : A, z_1 : C_1 \vdash z_2 : C_2}{\mathcal{E}_0}
+            }}$$}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+
+\begin{frame}{}
+    \begin{itemize}
+        \item \textcolor{red}{Remaining:} Theorem 7 (Subformula property), configurations required for preservation, progress, etc.
+    \end{itemize}
+\end{frame}
+
+
 \begin{frame} {Related Work}
     \begin{itemize}
         \item Francalaza et. al\cite{FrancalanzaTP24} Presents an implementation of the message-passing interpretation of SAX in Go. Instead of focusing on a pure implementation, we focus on a mechanization of the meta-theoretic properties.
