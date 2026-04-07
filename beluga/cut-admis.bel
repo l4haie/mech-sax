@@ -1,35 +1,49 @@
-%inductive sub : (Γ : mctxS) {Γ'  : mlctx} {$ρ : $[Γ ⊢ Γ']} ctype =
-%  | sub/nil : sub [] $[Γ ⊢ ^]
-%  | sub/cons/1 : sub [Γ'] $[Γ ⊢ $ρ] → sub [Γ', a: mhypS A[]] $[Γ, y:mhypS A[] ⊢ $ρ[..,a]]
-%;
-
-
 rec mcut-admis : {Γ: mlctx} {A: [⊢ mo]} [Γ ⊢ mlconcS A[]] → [Γ, x:mlhypS A[] ⊢ mlconcS C[]] → [Γ ⊢ mlconcS C[]] =
 %/ total 1 /
 mlam Γ ⇒ mlam A ⇒ fn D ⇒ fn E ⇒
 case (D, E)  of
+  %*/_
   | ([Γ ⊢ mlconcS/* D'] ,  [Γ, x : mlhypS _ ⊢ E] ) ⇒
 	[Γ ⊢ mlsnip1S D' (\h. E[..,h])]
-  | ([Γ ⊢ mlinitialS h], [Γ, x : mlhypS _  ⊢ E]) ⇒
-	[Γ ⊢ E[..,h]]
-  | (_ , [Γ, h :  mlhypS _ ⊢ mlinitialS h]) ⇒ D
-  |  ([Γ ⊢ m⊃lRS (\h. B)], [Γ, x : mlhypS _  ⊢ mlconcS/* (m⊃lL0S h1[] x e)]) ⇒
-	 [Γ ⊢ B[..,h1[]]]
-  | ([Γ ⊢ D],   [Γ, x : mlhypS A[]  ⊢  m⊃lRS (\h. B)]) ⇒
-	let [Γ, z : mlhypS _ ⊢ F] = mcut-admis _ _ [Γ, z : mlhypS _  ⊢ D[..]]
-					[Γ, z : mlhypS _ , x : mlhypS A[] ⊢ B[..,z]] in
-	[Γ ⊢ m⊃lRS (\h. F[..,h])]
-  | ([Γ ⊢ D], [Γ, x : mlhypS A[] ⊢ mlsnip1S A* (\h. C) ]) ⇒
-	let [Γ ⊢ F1] = mcut-admis _ _ [Γ ⊢ D] [Γ, x : mlhypS A[]  ⊢ mlconcS/* A*] in
-	let [Γ, y : mlhypS _  ⊢ F2] = mcut-admis _ _ [Γ, y : mlhypS _  ⊢ D[..]]
-					  [Γ, y : mlhypS _, x : mlhypS A[] ⊢ C[.., y]] in
-	mcut-admis _ _ [Γ ⊢ F1]  [Γ, y : mlhypS _  ⊢ F2]
-  | ([Γ ⊢ D], [Γ, x : mlhypS A[] ⊢  mlsnip2S B (\h. \e. C)]) ⇒
-	let [Γ ⊢ F1] = mcut-admis _ _ [Γ ⊢ D] [Γ, x : mlhypS A[] ⊢ B] in
-	%	let [Γ ⊢ F2] = mcut-admis _ _ [Γ, y : mlhypS _ ⊢ D[..]]
-	%ISSUE HERE: context issue
-	%	   [Γ, y : mlhypS _, x : mlhypS A[]  ⊢ C[..,y]] in
-	?
+  %_/0
+    | ([Γ ⊢ D], [Γ, x : mlhypS _ ⊢ E[..]]) ⇒ [Γ ⊢ E]
+    %_/id
+    | (_ , [Γ, h :  mlhypS _ ⊢ mlinitialS h]) ⇒ D
+    %id/_
+    | ([Γ ⊢ mlinitialS h], [Γ, x : mlhypS _  ⊢ E]) ⇒
+	  [Γ ⊢ E[..,h]]
+
+    |  ([Γ ⊢ m⊃lRS (\h. B)], [Γ, x : mlhypS _  ⊢ mlconcS/* (m⊃lL0S h1[] x e)]) ⇒
+	   [Γ ⊢ B[..,h1[]]]
+    | ([Γ ⊢ D],   [Γ, x : mlhypS A[]  ⊢  m⊃lRS (\h. B)]) ⇒
+	  let [Γ, z : mlhypS _ ⊢ F] = mcut-admis _ _ [Γ, z : mlhypS _  ⊢ D[..]]
+					  [Γ, z : mlhypS _ , x : mlhypS A[] ⊢ B[..,z]] in
+	  [Γ ⊢ m⊃lRS (\h. F[..,h])]
+    | ([Γ ⊢ D], [Γ, x : mlhypS A[] ⊢ mlsnip1S A* (\h. C) ]) ⇒
+	  let [Γ ⊢ F1] = mcut-admis _ _ [Γ ⊢ D] [Γ, x : mlhypS A[]  ⊢ mlconcS/* A*] in
+	  let [Γ, y : mlhypS _  ⊢ F2] = mcut-admis _ _ [Γ, y : mlhypS _  ⊢ D[..]]
+					    [Γ, y : mlhypS _, x : mlhypS A[] ⊢ C[.., y]] in
+	  mcut-admis _ _ [Γ ⊢ F1]  [Γ, y : mlhypS _  ⊢ F2]
+    | ([Γ ⊢ D], [Γ, x : mlhypS A[] ⊢  mlsnip2S B (\h. \e. C)]) ⇒
+	  let [Γ ⊢ F1] = mcut-admis _ _ [Γ ⊢ D] [Γ, x : mlhypS A[] ⊢ B] in
+	  let [Γ, b:block(y : mlhypS _, e :  melig y) ⊢ F2] =
+	  mcut-admis _ _ [Γ, b:block(y : mlhypS _, e :  melig y)  ⊢ D[..]]
+	      [Γ, b:block(y : mlhypS _, e :  melig y), x : mlhypS A[]  ⊢ C[..,b.1,b.2]] in
+	  [Γ |- mlsnip2S F1 \h. \e. F2[.., <h ; e>]]
+    | ([Γ ⊢ mlsnip1S B* (\b. A)], [Γ, x : mlhypS a[] ⊢ C] ) ⇒
+	  let [Γ, y : mlhypS B[] ⊢ F] = mcut-admis _ _ [Γ, y : mlhypS _ ⊢ A[..,y]]
+					    [Γ, y : mlhypS _, x : mlhypS a[] ⊢ C[..,x]] in
+	  [Γ ⊢ mlsnip1S B* (\h. F[..,h])]
+    | ([Γ ⊢ mlsnip2S B (\h. \e. a)], [Γ, x : mlhypS A[] ⊢  c]) ⇒
+	  let [Γ,  b:block(y : mlhypS _, e : melig y) ⊢ F] =
+	  mcut-admis _ _ [Γ, b:block(y : mlhypS _, e : melig y) ⊢ a[..,b.1,b.2]]
+	      [Γ, b:block(y : mlhypS _, e : melig y), x : mlhypS A[] ⊢ c[..]] in
+	  [Γ ⊢ mlsnip2S B (\h. \e. F[..,<h;e>])]
+
+    %%%%%%%%%%
+    | ([Γ ⊢ D], [Γ, x : mlhypS _ ⊢ mlconcS/* (m⊃lL0S h1[..] h2[..] eh1[..])]) ⇒
+	  [Γ ⊢  mlconcS/* (m⊃lL0S h1[..] h2[..] eh1[..])]
+    | ([Γ ⊢ D], [Γ, x : mlhypS _ ⊢ mlinitialS h[..]]) ⇒ [Γ ⊢  mlinitialS h[..]]
 ;
 
 
