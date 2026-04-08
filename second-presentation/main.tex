@@ -181,7 +181,7 @@ Some cuts are allowed in SAX: \textbf{Snips}
   \item We also track irrelevant formulas ($^0$) that are never used (for cut
     elimination)
 \end{itemize}
-\[
+\[\tiny
   \infer[{\supset}R]{x:A \supset B, y:B \supset C \vdash z:A \supset C}{
     \infer[\text{Snip}_B]{u^*:A, x:A \supset B, y:B \supset C \vdash w^*:C}{
       \infer[{\supset}L^0]{u^*:A, x:A \supset B, y^0:B \supset C \vdash t^*:B}{} &
@@ -192,7 +192,7 @@ Some cuts are allowed in SAX: \textbf{Snips}
 
 Two snips rules depending on which side contains the eligible occurrence:
 
-\[\tiny
+\[\scriptsize
   \infer[\Text{Snip}_A^1]{\Gamma \vdash z : C}{
     \Gamma \vdash x^* : A &
     \Gamma, x : A \vdash z : C
