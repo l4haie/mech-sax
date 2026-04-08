@@ -25,66 +25,6 @@
 
 
 \end{frame}
-\section{Shared Memory Interpretation}
-\begin{frame}{The Basics}
-\scriptsize
-\textbf{Key idea:} variables become addresses in shared memory; a sequent
-\[
-  x_1 : A_1, \ldots, x_n : A_n \vdash P :: (z : C)
-\]
-types a process $P$ that \textbf{reads} from $x_1, \ldots, x_n$ and \textbf{writes} to $z$.
-
-\medskip
-Rules correspond to memory operations:
-\begin{itemize}
-\item \textbf{Cut} $\to$ allocate a fresh cell (a \emph{future}): $x
-  \leftarrow P\,;\,Q$  
-\item \textbf{Axioms} $\to$ write;\quad \textbf{Invertible rules} $\to$
-  read;\quad \textbf{Identity} $\to$ $\mathtt{copy}\; a\; b$
-\end{itemize}
-
-\medskip
-\textbf{Example}: ${\supset}L^0$ reads the continuation at $x$,
-passing argument $y$ and destination $z$:
-\[
-  \infer[{\supset}L^0]
-    {\Gamma,\, y^*\!:A,\, x : A \supset B \vdash x^R.\langle y, z\rangle :: (z^*\!:B)}{}
-\]
-
-\medskip
-\end{frame}
-
-\begin{frame} {More on dynamics}
-
-\textbf{Configurations} - Long story short, in order to make the dynamics better represent the notion of shared memory, we want to represent multicuts, to do these we use configurations which are multisets of:
-$\mathtt{thread}(a,P)$,\;
-% Check the definition of this in the paper, this was wrong I believe
-$!\mathtt{cell}(a, W)$,\;
-$\mathtt{cell}(c, \_)$ 
-\begin{figure}
-    \includegraphics[width=1\textwidth]{dynamics.png}
-\end{figure}
-\medskip
-\textbf{Properties:} Preservation, Progress, Confluence, Termination.
-
-\end{frame}
-
-\section{Message-Passing Interpretation}
-
-\begin{frame} {Message-Passing Interpretation}
-    Comes from the adjoint formalization of SAX 
-    \medskip{}
-
-    \textbf{Key Idea: } Variables become channels, P provides a channel $x$
-    \[(x_1: A^1) \dots (x_n : A^n) \vdash P::(x:A)\]
-
-    We add a mode $\sigma{(m)}$ that described the structural properties of a channel (a la adjoint logic), to go between we have shifts
-
-\begin{figure}
-    \includegraphics[width=1\textwidth]{messagepass.png}
-\end{figure}
-    
-\end{frame}
 
 \begin{frame} {Related Work}
     \begin{itemize}
