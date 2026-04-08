@@ -4,6 +4,10 @@
 \usepackage{amsmath, amsfonts, amssymb, amsthm, graphicx, turnstile, proof,
   logicproof, hyperref, filecontents}
 
+% Theorem boxes
+\setbeamercolor{block title}{bg=structure.fg!20, fg=black}
+\setbeamercolor{block body}{bg=white, fg=black}
+
 \title{Soprillo: Small, but Mechanized SAX}
 \author{Arman Ahmed, Max Gross, Fr\'{e}d\'{e}ric Lahaie-Bertrand}
 \date{April 2026}
@@ -16,56 +20,123 @@
 % Fred
 
 \begin{frame}{Introduction}
+\small
   
-Mechanize the Semi-Axiomatic Sequent Calculus (SAX) \cite{DeYoung2020}
+Mechanize a subset of the Semi-Axiomatic Sequent Calculus (SAX) \cite{DeYoung2020}
 \begin{itemize}
-  \item Proof theory: equivalence with G3, admissibility of cut,
-    cut-elimination, subformula property
-  \item Type theory: type preservation and progress
+  \item \textbf{Goal 1}: Mechanize its proof theory (translations between $G_3$
+    and Sax, admissibility of cut, cut elimination, and subformula property)
+  \item \textbf{Goal 2}: Mechanize its operational semantics and prove some of
+    its properties (type preservation and progress)
 \end{itemize}
-  
-Presentation
+
+\medskip
+Overview of the presentation:
 \begin{itemize}
-  \item Fred: SAX \& Proof theory
-  \item Arman: Computational interpretation \& Type theory
+  \item Fred: SAX and its proof theory
+  \item Arman: Computational interpretation 
   \item Max: Mechanization details
-\end{itemize}
-  
+\end{itemize}  
 \end{frame}
 
 
 \begin{frame}{Semi-Axiomatic Sequent Calculus (SAX)}
+\small
   
-SAX arises from G3 by replacing all \textbf{noninvertible}
-rules with axioms while leaving all the invertible rules 
-unchanged:
+SAX arises from $G_3$ by replacing all \textbf{noninvertible} rules with axioms
+while leaving all the \textbf{invertible} rules unchanged
 \begin{itemize}
-  \item Noninvertible (e.g. ${\supset}L$):
-  \item Invertible (e.g. ${\supset}R$):
-\end{itemize}
-  
-Example:
+  \item Invertible: conclusion derivable $\Rightarrow$ premises derivable 
+    \[ \small
+      \infer[{\supset}R]{\Gamma \vdash A \supset B}{
+        \Gamma, A \vdash B
+      }
+    \]
+  \item Noninvertible: conclusion derivable $\not\Rightarrow$ premises derivable 
+    \[ \small
+      \infer[{\supset}L]{\Gamma, A \supset B \vdash C}{
+        \Gamma, A \supset B \vdash A \quad
+        \Gamma, A \supset B, B \vdash C
+      }
+      \;\;\Longrightarrow\;\;
+      \infer[{\supset}L^0]{\Gamma, A, A \supset B \vdash B}{}
+    \]
+\end{itemize}  
+\end{frame}
+
+
+\begin{frame}{Semi-Axiomatic Sequent Calculus (SAX)}  
+\scriptsize
 \[
-  \infer[{\supset}L]{\Gamma, A \supset B \vdash C}{
-    \Gamma, A \supset B \vdash A \quad
-    \Gamma, A \supset B, B \vdash C
+  \infer[\text{Id}_A]{\Gamma, A \vdash A}{}
+  \qquad
+  \infer[\text{Cut}_A]{\Gamma \vdash C}{
+    \Gamma \vdash A &
+    \Gamma, A \vdash C
   }
-  \;\;\Longrightarrow\;\;
+\]
+
+\[
+  \infer[{\supset}R]{\Gamma \vdash A \supset B}{
+    \Gamma, A \vdash B
+  }
+  \qquad
   \infer[{\supset}L^0]{\Gamma, A, A \supset B \vdash B}{}
+\]
+
+\[
+  \infer[{\otimes}R^0]{\Gamma, A, B \vdash A \otimes B}{}
+  \qquad
+  \infer[{\otimes}L]{\Gamma, A \otimes B \vdash C}{
+    \Gamma, A \otimes B, A, B \vdash C
+  }
+\]
+
+\[
+  \infer[1R^0]{\Gamma \vdash 1}{}
+  \qquad
+  \infer[1L]{\Gamma, 1 \vdash C}{
+    \Gamma, 1 \vdash C
+  }
+\]
+
+\[
+  \infer[{\&}R]{\Gamma \vdash A \mathbin{\&} B}{
+    \Gamma \vdash A &
+    \Gamma \vdash B
+  }
+  \qquad
+  \infer[{\&}L_1^0]{\Gamma, A \mathbin{\&} B \vdash A}{}
+  \qquad
+  \infer[{\&}L_2^0]{\Gamma, A \mathbin{\&} B \vdash B}{}
+\]
+
+\[
+  \infer[{\lor}R_1^0]{\Gamma, A \vdash A \vee B}{}
+  \qquad
+  \infer[{\lor}R_2^0]{\Gamma, B \vdash A \vee B}{}
+  \qquad
+  \infer[{\lor}L]{\Gamma, A \vee B \vdash C}{
+    \Gamma, A \vee B, A \vdash C &
+    \Gamma, A \vee B, B \vdash C
+  }
 \]
 \end{frame}
 
-\begin{frame}{Soprillo}  
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=\textwidth]{figures/soprillo.png}
-\end{figure}
-\end{frame}
 
 \begin{frame}{Cut-Elimination in SAX}
-\textbf{Cut elimination fails} because axioms introduce formulas that can't be
-decomposed:
-\[\tiny
+\small
+
+Standard \textbf{cut-elimination fails}:
+\begin{itemize}
+  \item Axioms introduce formulas that can't be decomposed 
+  \item No premises $\Rightarrow$ no way to reduce the cut or to push it upwards
+\end{itemize}
+
+\bigskip
+
+Example:
+\[\small
   \infer[{\supset}R]{A \supset B, B \supset C \vdash A \supset C}{
     \infer[\text{Cut}_B]{A, A \supset B, B \supset C \vdash C}{
       \infer[{\supset}L^0]{A, A \supset B \vdash B}{} &
@@ -73,15 +144,40 @@ decomposed:
     }
   }
 \]
-But this cut is \textbf{analytic} $\implies$ subformula property is not lost.    
+
+\medskip
+
+Can't eliminate the cut on $B$... but the cut is \textbf{analytic}
+\begin{itemize}
+  \item Analytic cut: cut formula is a subformula of the conclusion sequent 
+  \item Subformula property is not lost
+\end{itemize}
 \end{frame}
 
 \begin{frame}{Snips}
-\scriptsize
-\textbf{Snips} are cuts where the cut formula is \emph{eligible}, i.e. it arose
-as a subformula inside an axiom's principal formula. Eligibility is tracked by
-labeling formula occurrences as eligible ($^*$) or irrelevant ($^0$) and
-propagating through the derivation
+\footnotesize
+Some cuts are allowed in SAX: \textbf{Snips}
+\begin{itemize}
+  \item Snips are cuts where the cut formula is \textbf{eligible}, i.e. it arose
+    as a subformula inside an axiom's principal formula
+  \item Eligibility is tracked by labelling formula occurrences as eligible
+    ($^*$) propagating through the derivation  
+  \item Note: eligibility is a known \textbf{property}, not part of the syntax
+    of sequents
+  \item We also track irrelevant formulas ($^0$) that are never used (for cut
+    elimination)
+\end{itemize}
+\[\tiny
+  \infer[{\supset}R]{x:A \supset B, y:B \supset C \vdash z:A \supset C}{
+    \infer[\text{Snip}_B]{u^*:A, x:A \supset B, y:B \supset C \vdash w^*:C}{
+      \infer[{\supset}L^0]{u^*:A, x:A \supset B, y^0:B \supset C \vdash t^*:B}{} &
+      \infer[{\supset}L^0]{u^0:A, x^0:A \supset B, t^*:B, y:B \supset C \vdash w^*:C}{}
+    }
+  }
+\]
+
+Two snips rules depending on which side contains the eligible occurrence:
+
 \[
   \infer[\Text{Snip}_A^1]{\Gamma \vdash z : C}{
     \Gamma \vdash x^* : A &
@@ -93,29 +189,86 @@ propagating through the derivation
     \Gamma, x^* : A \vdash z : C
   }
 \]
-Example:
-\[\tiny
-  \infer[{\supset}R]{x:A \supset B, y:B \supset C \vdash z:A \supset C}{
-    \infer[\text{Snip}_B]{u^*:A, x:A \supset B, y:B \supset C \vdash w^*:C}{
-      \infer[{\supset}L^0]{u^*:A, x:A \supset B, y^0:B \supset C \vdash t^*:B}{} &
-      \infer[{\supset}L^0]{u^0:A, x^0:A \supset B, t^*:B, y:B \supset C \vdash w^*:C}{}
-    }
-  }
-\]
-\textbf{Cut-free in SAX} = no general cuts, snips permitted $\implies$ 
-Admissibility of cut
 \end{frame}
 
-\begin{frame}{Labelled Soprillo}
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=\textwidth]{figures/soprillo-lbl.png}
-\end{figure}
+
+\begin{frame}{Labelled SAX}
+\tiny
+\[
+  \infer[\text{Id}_A]{\Gamma^0,\; x : A \vdash y : A}{}
+  \qquad
+  \infer[\text{Cut}_A]{\Gamma \vdash z : C}{
+    \Gamma \vdash x : A &
+    \Gamma,\; x : A \vdash z : C
+  }
+\]
+
+\[
+  \infer[\text{Snip}_A^1]{\Gamma \vdash z : C}{
+    \Gamma \vdash x^\ast : A &
+    \Gamma,\; x : A \vdash z : C
+  }
+  \qquad
+  \infer[\text{Snip}_A^2]{\Gamma \vdash z : C}{
+    \Gamma \vdash x : A &
+    \Gamma,\; x^\ast : A \vdash z : C
+  }
+\]
+
+\[
+  \infer[{\supset}R]{\Gamma \vdash x : A \supset B}{
+    \Gamma,\; y : A \vdash z : B
+  }
+  \qquad
+  \infer[{\supset}L^0]{\Gamma^0,\; y^\ast : A,\; x : A \supset B \vdash z^\ast : B}{}
+\]
+
+\[
+  \infer[{\otimes}R^0]{\Gamma^0,\; y^\ast : A,\; z^\ast : B \vdash x : A \otimes B}{}
+  \qquad
+  \infer[{\otimes}L]{\Gamma,\; x : A \otimes B \vdash w : C}{
+    \Gamma,\; x : A \otimes B,\; y : A,\; z : B \vdash w : C
+  }
+\]
+
+\[
+  \infer[1R^0]{\Gamma^0 \vdash x : 1}{}
+  \qquad
+  \infer[1L]{\Gamma,\; x : 1 \vdash w : C}{
+    \Gamma,\; x : 1 \vdash w : C
+  }
+\]
+
+\[
+  \infer[{\&}R]{\Gamma \vdash x : A \mathbin{\&} B}{
+    \Gamma \vdash y : A &
+    \Gamma \vdash z : B
+  }
+  \qquad
+  \infer[{\&}L_1^0]{\Gamma^0,\; x : A \mathbin{\&} B \vdash y^\ast : A}{}
+  \qquad
+  \infer[{\&}L_2^0]{\Gamma^0,\; x : A \mathbin{\&} B \vdash z^\ast : B}{}
+\]
+
+\[
+  \infer[{\lor}R_1^0]{\Gamma^0,\; x^\ast : A \vdash z : A \vee B}{}
+  \qquad
+  \infer[{\lor}R_2^0]{\Gamma^0,\; y^\ast : B \vdash z : A \vee B}{}
+\]
+
+\[
+  \infer[{\lor}L]{\Gamma,\; z : A \vee B \vdash w : C}{
+    \Gamma,\; z : A \vee B,\; x : A \vdash w : C &
+    \Gamma,\; z : A \vee B,\; y : B \vdash w : C
+  }
+\]
 \end{frame}
 
 
 \begin{frame}{Proof Theory: Main Results}
+\scriptsize
 
+\textbf{Cut-free in SAX} = no general cuts, snips permitted:
 \begin{theorem}[Admissibility of Cut in SAX]
   If there are cut-free derivations of $\Gamma \vdash x : A$ and
   $\Gamma, x : A \vdash z : C$, then there exists a cut-free derivation
@@ -132,13 +285,42 @@ Admissibility of cut
   subformulas of formulas in $\Gamma$ or $A$.
 \end{theorem}
 
+\medskip 
+
+Also, why not:
+\begin{theorem}[Translations between G3 and SAX]
+  $\Gamma \vdash A$ in $G_3$ iff $\Gamma \vdash A$ in SAX.
+\end{theorem}
 \end{frame}
 
 
-\begin{frame}{Cut Admissibility: A Worked Example}
+\begin{frame}{Proof of Cut Admissibility}
+\scriptsize
 
-TODO
+Proof of cut admissibility is slightly more involved:
+\begin{itemize}
+  \item Similar general structure: nested induction on the cut formula $A$ and
+    on the structure of the derivations $\mathcal{D}$ and $\mathcal{E}$
+  \item Must track eligibility and irrelevance:
+    \begin{itemize}
+      \item \scriptsize Eligible cut $\Rightarrow$ snip, \quad irrelevant cut
+        $\Rightarrow$ dropped
+      \item otherwise: reduce (principal) or propagate upward
+    \end{itemize}
+  \item Eligibility (property) is not always preserved under these
+    transformations $\Rightarrow$ direct proof doesn't work
+  \item To ensure progress: if eligibility is lost, a cut on $A$ is replaced by
+    a cut on a strict subformula $B < A$, allowing recursion
+\end{itemize}
 
+\bigskip
+
+$\implies$ our proof of cut admissibility and cut elimination only currently
+covers a small subset of SAX (Id, $\supset L^0$, $\supset R$, and Snip rules)
+
+\bigskip
+
+$\implies$ \textbf{Soprillo} 
 \end{frame}
 
 
