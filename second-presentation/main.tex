@@ -316,9 +316,12 @@ $$\infer[\textcolor{green}{\textrm{Snip}^1_A}]{\Gamma \vdash z : C}{\Gamma \vdas
 
     \begin{columns}
         \begin{column}{0.48\linewidth}
+  
            
 \scriptsize
 \ttfamily
+
+
 
 rec mcut-admis : \{$\Gamma$: mlctx\} \{A: [$\vdash$ mo]\}\\
 \quad [$\Gamma \vdash$ mlconcS A[]]\\
@@ -332,11 +335,11 @@ case (D, E) of\\[4pt]
 
 \quad $\dots$\\[4pt]
 
-\quad | ([$\Gamma \vdash$ D], [$\Gamma$, x : mlhypS A[] $\vdash$ m$\supset$lRS (\textbackslash h.\ B)]) ⇒\\[4pt]
+\quad | ([$\Gamma \vdash$ D], [$\Gamma$, x : mlhypS A[] $\vdash$ m$\supset$lRS (\textbackslash h.\ C)]) ⇒\\[4pt]
 
 \quad\quad let [$\Gamma$, z : mlhypS \_ $\vdash$ F] = mcut-admis \_ \_\\
 \quad\quad\quad [$\Gamma$, z : mlhypS \_ $\vdash$ D[..]]\\
-\quad\quad\quad [$\Gamma$, z : mlhypS \_, x : mlhypS A[] $\vdash$ B[..,z]]\\
+\quad\quad\quad [$\Gamma$, z : mlhypS \_, x : mlhypS A[] $\vdash$ C[..,z]]\\
 \quad\quad in\\[4pt]
 
 \quad\quad [$\Gamma \vdash$ m$\supset$lRS (\textbackslash h.\ F[..,h])]\\[4pt]
@@ -365,9 +368,10 @@ case (D, E) of\\[4pt]
 \begin{frame}{}
     \begin{itemize}
         \item \textcolor{red}{Remaining:} Theorem 7 (Subformula property), configurations required for preservation, progress, etc.
+        \item Theorem 7: All formulas in a cut-free derivation of $\Gamma \vdash x : A$ are subformulas of formulas in $\Gamma$ or $A$. Unsure how to formalize this. 
+        \item Configurations are done on multisets, which prove challenging to work with in Beluga. Can we treat them as ordered lists? 
     \end{itemize}
 \end{frame}
-
 
 \begin{frame} {Related Work}
     \begin{itemize}
