@@ -27,7 +27,7 @@ Mechanize a subset of the Semi-Axiomatic Sequent Calculus (SAX) \cite{DeYoung202
   \item \textbf{Goal 1}: Mechanize its proof theory (translations between $G_3$
     and Sax, admissibility of cut, cut elimination, and subformula property)
   \item \textbf{Goal 2}: Mechanize its operational semantics and prove some of
-    its properties (type preservation and progress)
+    its properties (type preservation and progress) (Stretch)
 \end{itemize}
 
 \medskip
@@ -40,6 +40,20 @@ Overview of the presentation:
 \end{frame}
 
 
+\section{Motivation}
+\begin{frame} {A Brief Run Through of History}
+  The way we formalize intuitionistic logic can change its computational interpretation 
+  \medskip{}
+
+  \qquad Curry-Howard isomorphism \\
+  \qquad Herbelin \cite{Herbelin} introduces LJT based on the sequent calculus - explicit substitutions and concatenations \\
+  \qquad What happens when we replace non-invertible rules with axioms?
+
+
+
+\end{frame}
+
+\section{Proof Theory}
 \begin{frame}{Semi-Axiomatic Sequent Calculus (SAX)}
 \small
   
@@ -167,7 +181,7 @@ Some cuts are allowed in SAX: \textbf{Snips}
   \item We also track irrelevant formulas ($^0$) that are never used (for cut
     elimination)
 \end{itemize}
-\[\tiny
+\[
   \infer[{\supset}R]{x:A \supset B, y:B \supset C \vdash z:A \supset C}{
     \infer[\text{Snip}_B]{u^*:A, x:A \supset B, y:B \supset C \vdash w^*:C}{
       \infer[{\supset}L^0]{u^*:A, x:A \supset B, y^0:B \supset C \vdash t^*:B}{} &
@@ -178,7 +192,7 @@ Some cuts are allowed in SAX: \textbf{Snips}
 
 Two snips rules depending on which side contains the eligible occurrence:
 
-\[
+\[\tiny
   \infer[\Text{Snip}_A^1]{\Gamma \vdash z : C}{
     \Gamma \vdash x^* : A &
     \Gamma, x : A \vdash z : C
@@ -327,9 +341,10 @@ $\implies$ \textbf{Soprillo}
 % ===========================================================================
 % Arman
 
-\begin{frame}{SAX: Shared Memory Interpretation}
+\section{Shared Memory Interpretation}
+\begin{frame}{The Basics}
 \scriptsize
-\textbf{Key idea:} variables become addresses; a sequent
+\textbf{Key idea:} variables become addresses in shared memory; a sequent
 \[
   x_1 : A_1, \ldots, x_n : A_n \vdash P :: (z : C)
 \]
@@ -353,20 +368,44 @@ passing argument $y$ and destination $z$:
 \]
 
 \medskip
-\textbf{Configurations} are multisets of:
+\end{frame}
+
+\begin{frame} {More on dynamics}
+
+\textbf{Configurations} - Long story short, in order to make the dynamics better represent the notion of shared memory, we want to represent multicuts, to do these we use configurations which are multisets of:
 $\mathtt{thread}(a,P)$,\;
 % Check the definition of this in the paper, this was wrong I believe
 $!\mathtt{cell}(a, W)$,\;
 $\mathtt{cell}(c, \_)$ 
-
+\begin{figure}
+    \includegraphics[width=1\textwidth]{figures/dynamics.png}
+\end{figure}
 \medskip
 \textbf{Properties:} Preservation, Progress, Confluence, Termination.
+
 \end{frame}
 
+\section{Message-Passing Interpretation}
+
+\begin{frame} {Message-Passing Interpretation}
+    Comes from the adjoint formalization of SAX 
+    \medskip{}
+
+    \textbf{Key Idea: } Variables become channels, P provides a channel $x$
+    \[(x_1: A^1) \dots (x_n : A^n) \vdash P::(x:A)\]
+
+    We add a mode $\sigma{(m)}$ that described the structural properties of a channel (a la adjoint logic), to go between we have shifts
+
+\begin{figure}
+    \includegraphics[width=1\textwidth]{figures/messagepass.png}
+\end{figure}
+    
+\end{frame}
 
 % ===========================================================================
 % Max
 
+\section{Mechanization}
 \begin{frame}{Mechanizing SAX}
 
     \begin{itemize}
@@ -554,24 +593,28 @@ case (D, E) of\\[4pt]
         \item Configurations are done on multisets, which prove challenging to work with in Beluga. Can we treat them as ordered lists? 
     \end{itemize}
 \end{frame}
+%related work
 
 \begin{frame} {Related Work}
     \begin{itemize}
-        \item Francalaza et. al\cite{FrancalanzaTP24} Presents an implementation of the message-passing interpretation of SAX in Go. Instead of focusing on a pure implementation, we focus on a mechanization of the meta-theoretic properties.
-        \item Zhang et al.\cite{zhang2025} gives a mechanization of logical relations for message passing protocols in Coq.
-        \item DeYoung et al.\cite{DeYoungP23} presents several metatheoretic proofs for SNAX, including type-safety.
+        \item We don't know of any other mechanizations of SAX itself, nor its proof theoretic properties
+        \item DeYoung et al. ~\cite{DeYoung2020} present SAX and the meta-theoretic properties that we mechanize
+        \item Francalaza et al.~\cite{FrancalanzaTP24} Presents an implementation of the message-passing interpretation of SAX in Go. 
+        \item Zhang et al.~\cite{zhang2025} gives a mechanization of logical relations for message passing protocols in Coq.
     \end{itemize}
 
 \end{frame}
 
 \begin{frame}{Timeline}
   \begin{itemize}
-    \item Mechanize statics and dynamics - March 13th
-    \item Mechanize subformula property, begin slides - March 18th
-    \item Mechanize Admissibility of cut, cut-elimination, begin initial stages of writeup - March 25th
-    \item Finish slides - April 4th
-    \item Mechanize type preservation, confluence, Progress - April 10th
-    \item Mechanize termination, SNAX, finish writeup - mid April
+    \item Mechanize SAX and Soprillo  \checkmark
+    \item Mechanize translation to $G_3$  \checkmark
+    \item Mechanize labelled SAX, Soprillo  \checkmark
+    \item Mechanize cut admissibility for Soprillo  \checkmark
+    \item Mechanize cut elimination - April 12th 
+    \item Mechanize shared memory interpretation (Stretch)  
+    \item Mechanize type preservation, confluence, Progress (Stretch)
+    \item Finish write up - mid April
   \end{itemize} 
 \end{frame}
 
