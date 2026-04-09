@@ -86,12 +86,16 @@ LF lconcS : o → type =
 		→ lconcS C
 ;
 
-% Mini labeled system: implication only
+
+
+% Soprillo (Mini SAX)
 
 LF mo : type =  % formulas
   | m⊃ : mo → mo → mo
+  % | m⊗ : mo → mo → mo
 ;
 
+% --infix m⊗ 7 right.
 --infix m⊃ 3 right.
 
 LF mlhypS : mo → type = ;
@@ -122,6 +126,40 @@ LF mlconcS : mo → type =
 	       → mlconcS C
 
   | m⊃lRS : (mlhypS A → mlconcS B)
-	    → mlconcS (A m⊃ B)
+	        → mlconcS (A m⊃ B)
+
+  % | m⊗lLS : (mlhypS (A m⊗ B) → mlhypS A → mlhypS B → mlconcS C)
+  %   	→ mlhypS (A m⊗ B)
+  %   	→ mlconcS C
+                 
+  % | m⊗lR0S : {h1 : mlhypS A} {h2 : mlhypS B}
+  %          melig h1 → melig h2
+  %          → mlconcS (A m⊗ B)
+                      
   | mlconcS/* : mlconcS* A → mlconcS A
+;
+
+
+% Mini SAX with cut (for cut elimination)
+LF mlconcSC : mo → type =
+  | mlcutSC : mlconcSC A
+              → (mlhypS A → mlconcSC C)
+              → mlconcSC C
+
+  | mlinitialSC : {h : mlhypS A}
+		 %mirrel h
+		 → mlconcSC A
+
+  | mlsnip1SC : mlconcS* A
+	       → (mlhypS A → mlconcSC C)
+	       → mlconcSC C
+
+  | mlsnip2SC : mlconcS A
+	       → ({h : mlhypS A} melig h → mlconcSC C)
+	       → mlconcSC C
+
+  | m⊃lRSC : (mlhypS A → mlconcSC B)
+	        → mlconcSC (A m⊃ B)
+                      
+  | mlconcS/*C : mlconcS* A → mlconcSC A
 ;
