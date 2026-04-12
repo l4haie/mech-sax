@@ -129,8 +129,8 @@ LF mlconcS : mo → type =
 	        → mlconcS (A m⊃ B)
 
   % | m⊗lLS : (mlhypS (A m⊗ B) → mlhypS A → mlhypS B → mlconcS C)
-  %   	→ mlhypS (A m⊗ B)
-  %   	→ mlconcS C
+  %   	    → mlhypS (A m⊗ B)
+  %   	    → mlconcS C
                  
   % | m⊗lR0S : {h1 : mlhypS A} {h2 : mlhypS B}
   %          melig h1 → melig h2
@@ -154,12 +154,20 @@ LF mlconcSC : mo → type =
 	       → (mlhypS A → mlconcSC C)
 	       → mlconcSC C
 
-  | mlsnip2SC : mlconcS A
+  | mlsnip2SC : mlconcSC A
 	       → ({h : mlhypS A} melig h → mlconcSC C)
 	       → mlconcSC C
 
   | m⊃lRSC : (mlhypS A → mlconcSC B)
 	        → mlconcSC (A m⊃ B)
-                      
+
+  % | m⊗lLSC : (mlhypS (A m⊗ B) → mlhypS A → mlhypS B → mlconcSC C)
+  %   	→ mlhypS (A m⊗ B)
+  %   	→ mlconcSC C
+                 
+  % | m⊗lR0SC : {h1 : mlhypS A} {h2 : mlhypS B}
+  %          melig h1 → melig h2
+  %          → mlconcSC (A m⊗ B)
+                     
   | mlconcS/*C : mlconcS* A → mlconcSC A
 ;
