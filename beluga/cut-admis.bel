@@ -15,15 +15,8 @@ case (D, E) of
   %% _/0
   | ([Γ ⊢ D], [Γ, x : mlhypS _ ⊢ E[..]]) ⇒ [Γ ⊢ E]
   %% ⊃R/⊃L0
-  %% Case 1: empty context
   | ([Γ ⊢ m⊃lRS (\h. B)], [Γ, x : mlhypS _ ⊢ mlconcS/* (m⊃lL0S h1[] x e)]) ⇒
     [Γ ⊢ B[.., h1[]]]
-  %% Case 2: h1 is a parameter variable from Γ
-  | ([Γ ⊢ m⊃lRS (\h. B)], [Γ, x : mlhypS _ ⊢ mlconcS/* (m⊃lL0S #p[..] x e)]) ⇒
-    [Γ ⊢ B[.., #p]]
-  %% Case 3: h1 and e come from a block in Γ 
-  | ([Γ ⊢ m⊃lRS (\h. B)], [Γ, x : mlhypS _ ⊢ mlconcS/* (m⊃lL0S #p.1[..] x #p.2[..])]) ⇒
-    [Γ ⊢ B[.., #p.1]]
   %% _/⊃R
   | ([Γ ⊢ D], [Γ, x : mlhypS A[] ⊢ m⊃lRS (\h. B)]) ⇒
     let [Γ, z : mlhypS _ ⊢ F] =
@@ -56,6 +49,7 @@ case (D, E) of
       mcut-admis _ _ [Γ, b:block(y : mlhypS _, e : melig y) ⊢ a[..,b.1,b.2]]
                      [Γ, b:block(y : mlhypS _, e : melig y), x : mlhypS A[] ⊢ c[..]] in
     [Γ ⊢ mlsnip2S B (\h. \e. F[..,<h;e>])]
+  | _ => ?
 ;
 
 
