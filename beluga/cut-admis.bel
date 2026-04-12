@@ -8,12 +8,19 @@ mlam Γ ⇒ mlam A ⇒ fn D ⇒ fn E ⇒
 case (D, E) of
   %% */_
   | ([Γ ⊢ mlconcS/* D'], [Γ, x : mlhypS _ ⊢ E]) ⇒
-    [Γ ⊢ mlsnip1S D' (\h. E[..,h])]        
+    [Γ ⊢ mlsnip1S D' (\h. E[..,h])]
+  %% _/*
+  | ([Γ ⊢ D], [Γ, x : mlhypS A[] ⊢ mlconcS/* A*]) ⇒
+    [Γ ⊢ mlsnip2S D (\h. \e. mlconcS/* A*[.., h])]
+  %% _/0
+  | ([Γ ⊢ D], [Γ, x : mlhypS _ ⊢ E[..]]) ⇒
+    [Γ ⊢ E]
+  %% _/Id
+  | ([Γ ⊢ D], [Γ, x : mlhypS _ ⊢ mlinitialS x]) ⇒
+    [Γ ⊢ D]
   %% Id/_
   | ([Γ ⊢ mlinitialS h], [Γ, x : mlhypS _  ⊢ E]) ⇒
     [Γ ⊢ E[..,h]]
-  %% _/0
-  | ([Γ ⊢ D], [Γ, x : mlhypS _ ⊢ E[..]]) ⇒ [Γ ⊢ E]
   %% ⊃R/⊃L0
   | ([Γ ⊢ m⊃lRS (\h. B)], [Γ, x : mlhypS _ ⊢ mlconcS/* (m⊃lL0S h1[] x e)]) ⇒
     [Γ ⊢ B[.., h1[]]]
