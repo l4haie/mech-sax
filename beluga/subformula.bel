@@ -1,0 +1,75 @@
+LF subf : mo → mo → type =
+  | subf/refl : subf A A
+  | subf/⊃1 : subf C A → subf C (A m⊃ B)
+  | subf/⊃2 : subf C B → subf C (A m⊃ B)
+;
+
+inductive subctx : {Γ : mlctx} {A : [⊢ mo]} ctype =
+  | subctx/ne : {A : [⊢ mo]}
+		{#x : #[Γ ⊢ mlhypS B[]]}
+		→ [⊢ subf A B]
+		→ subctx [Γ] [⊢ A]
+  | subctx/e : {A : [⊢ mo]}
+	       → #[Γ ⊢ block(x : mlhypS B[], y : melig x)]
+	       → [⊢ subf A B]
+	       → subctx [Γ] [⊢ A]
+;
+
+
+inductive subfProp : {Γ : mlctx} {D : [Γ ⊢ mlconcS A[]]} ctype =
+  | subfProp/initial/ne : (#h : #[Γ ⊢ mlhypS A[]])
+			  subctx [Γ] [⊢ A] → subfProp [Γ] [Γ ⊢ mlinitialS #h]
+  %  | subfProp/initial/e : #[Γ ⊢ block(h : mlhypS A[], y : melig h)] →
+  %			 subctx [Γ] [⊢ A] → subfProp [Γ] [Γ ⊢ mlinitialS #h]
+  | subfProp/⊃R : subfProp [Γ, x : mlhypS A[]] [Γ, x : mlhypS A[] ⊢ D]
+		  → subfProp [Γ] [Γ ⊢ m⊃lRS (\x. D[..,x])]
+  | subfProp/* : subfProp* [Γ] [Γ ⊢ D]
+		 → subfProp [Γ] [Γ ⊢ mlconcS/* D]
+  | subfProp/snip1 : subfProp* [Γ] [Γ ⊢ D]
+		     → subfProp [Γ, x : mlhypS A[]] [Γ, x : mlhypS A[] ⊢ E]
+		     → subfProp [Γ] [Γ ⊢ mlsnip1S D (\x. E[..,x])]
+  | subfProp/snip2 : subfProp [Γ] [Γ ⊢ D] →
+		     subfProp [Γ, b:block(x : mlhypS A[], y : melig x)]
+		     [Γ, b:block(x : mlhypS A[], y : melig x) ⊢ E]
+		     → subfProp [Γ] [Γ ⊢ mlsnip2S D (\x. \y. E[..,<x;y>])]
+
+
+and
+
+inductive subfProp* : {Γ : mlctx} {D : [Γ ⊢ mlconcS* A[]]} ctype =
+  | subfProp*/⊃L : (#b : #[Γ ⊢ block(x : mlhypS A[], y : melig x) ])
+		   (#h2 : #[Γ ⊢ mlhypS (A[] m⊃ B[]) ])
+		   subctx [Γ] [⊢ A] → subctx [Γ] [⊢ A m⊃ B]
+		   → subfProp* [Γ] [Γ ⊢ m⊃lL0S #b.1 #h2 #b.2 ]
+
+
+;
+
+rec subformula-property : {Γ : mlctx} {D: [Γ ⊢ mlconcS A[]]}
+			  subfProp [Γ] [Γ ⊢ D] =
+%/ total 2 /
+mlam Γ D ⇒
+case [Γ ⊢ D] of
+  | [Γ ⊢ mlinitialS #h] ⇒  subfProp/initial/ne (subctx/ne _ [Γ ⊢ #h] [⊢ subf/refl])
+  | [Γ ⊢ mlsnip1S A (\h. C)] ⇒ let sp1 = subformula-property* _ [Γ ⊢ A] in
+			       let sp2 = subformula-property _ [Γ, h:mlhypS _ ⊢ C] in
+			       subfProp/snip1 sp1 sp2
+  | [Γ ⊢ mlsnip2S A (\h. \e. C)] ⇒ let sp1 = subformula-property _ [Γ ⊢ A] in
+				   let sp2 = subformula-property _
+						       [Γ, b:block(h:mlhypS _, e:melig h) ⊢ C[..,b.1,b.2]] in
+				   subfProp/snip2 sp1 sp2
+  | [Γ ⊢ m⊃lRS (\h. A)] ⇒ let sp1 = subformula-property _ [Γ,  x : mlhypS _ ⊢ A] in
+			  subfProp/⊃R sp1
+  | [Γ ⊢ mlconcS/* D] ⇒ subfProp/* (subformula-property* _ [Γ ⊢ D])
+
+
+
+% | [Γ ⊢ mlinitialS  ] ⇒  ? %subfProp/initial/e (subctx/ne _ [Γ ⊢ block(h : ] [⊢ subf/refl])
+
+and
+rec subformula-property* : {Γ : mlctx} {D: [Γ ⊢ mlconcS* A[]]}
+			   subfProp* [Γ] [Γ ⊢ D] =
+%/ total 2 /
+mlam Γ D ⇒ ?
+%  let [Γ ⊢ m⊃lL0S #h1.1 #h2 #h2.2] = [Γ ⊢ D] in ?
+;
