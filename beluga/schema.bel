@@ -1,7 +1,7 @@
 schema ctx = hyp a;
 schema ctxS = hypS a;
 schema mctxS = mhypS a;
-schema mlctx = mlhypS a + block(h : mlhypS a, mh : melig h);
+schema mlctx =  block(h : mlhypS a, mh : melig h) + mlhypS a;
 
 
 inductive rel-ctx-S : {Γ : ctx} {Γ' : ctxS} ctype =
