@@ -4,74 +4,190 @@ LF subf : mo → mo → type =
   | subf/⊃2 : subf C B → subf C (A m⊃ B)
 ;
 
-inductive subctx : {Γ : mlctx} {A : [⊢ mo]} ctype =
-  | subctx/ne : {A : [⊢ mo]}
-		{#x : #[Γ ⊢ mlhypS B[]]}
-		→ [⊢ subf A B]
-		→ subctx [Γ] [⊢ A]
-  | subctx/e : {A : [⊢ mo]}
-	       → #[Γ ⊢ block(x : mlhypS B[], y : melig x)]
-	       → [⊢ subf A B]
-	       → subctx [Γ] [⊢ A]
+%% A formula list representing the endsequent formulas
+LF formlist : type =
+  | fnil : formlist
+  | fcons : mo → formlist → formlist
+;
+
+%% B is a subformula of some formula in the list Σ
+LF inSig : mo → formlist → type =
+  | inSig/here : subf B A → inSig B (fcons A Σ)
+  | inSig/there : inSig B Σ → inSig B (fcons A Σ)
+;
+
+%% Every hypothesis in Γ is a subformula of some formula in Σ
+inductive ctxInSig : {Γ : mlctx} {Σ : [⊢ formlist]} ctype =
+  | ctxInSig/nil : ctxInSig [] [⊢ Σ]
+  | ctxInSig/ne  : ctxInSig [Γ] [⊢ Σ]
+		   → [⊢ inSig A Σ]
+		   → ctxInSig [Γ, x : mlhypS A[]] [⊢ Σ]
+  | ctxInSig/e   : ctxInSig [Γ] [⊢ Σ]
+		   → [⊢ inSig A Σ]
+		   → ctxInSig [Γ, b:block(x : mlhypS A[], y : melig x)] [⊢ Σ]
+;
+
+%%% Lookup: a plain hypothesis in Γ has its formula in Σ
+%rec lookupNE : ctxInSig [Γ] [⊢ Σ] → {#x : #[Γ ⊢ mlhypS A[]]}
+	       %→ [⊢ inSig A Σ] =
+%/ total 1 /
+%fn ci ⇒ mlam #x ⇒
+%case ci of
+  %| ctxInSig/ne ci' isig ⇒
+      %(case [_ ⊢ #x] of
+        %| [Γ, x : mlhypS _ ⊢ x] ⇒ isig
+        %| [Γ, x : mlhypS _ ⊢ #q[..]] ⇒ lookupNE ci' [Γ ⊢ #q])
+  %| ctxInSig/e ci' isig ⇒
+      %(case [_ ⊢ #x] of
+        %| [Γ, b:block(x:mlhypS _,y:melig x) ⊢ #q[..]] ⇒ lookupNE ci' [Γ ⊢ #q])
+%;
+
+%%% Lookup: a block hypothesis in Γ has its formula in Σ
+%rec lookupE : ctxInSig [Γ] [⊢ Σ]
+	      %→ {#b : #[Γ ⊢ block(x : mlhypS A[], y : melig x)]}
+	      %→ [⊢ inSig A Σ] =
+%/ total 1 /
+%fn ci ⇒ mlam #b ⇒
+%case ci of
+  %| ctxInSig/ne ci' isig ⇒
+      %(case [_ ⊢ #b] of
+        %| [Γ, x : mlhypS _ ⊢ #q[..]] ⇒ lookupE ci' [Γ ⊢ #q])
+  %| ctxInSig/e ci' isig ⇒
+      %(case [_ ⊢ #b] of
+        %| [Γ, b:block(x:mlhypS _,y:melig x) ⊢ b] ⇒ isig
+        %| [Γ, b:block(x:mlhypS _,y:melig x) ⊢ #q[..]] ⇒ lookupE ci' [Γ ⊢ #q])
+%;
+
+%% Lookup any mlhypS in Γ 
+rec lookup : ctxInSig [Γ] [⊢ Σ] → [Γ ⊢ mlhypS A[]]
+	     → [⊢ inSig A Σ] =
+/ total 1 /
+fn ci ⇒ fn h ⇒
+case ci of
+  | ctxInSig/nil ⇒ impossible h
+  | ctxInSig/ne ci' isig ⇒
+      (case h of
+        | [Γ, x : mlhypS _ ⊢ x] ⇒ isig
+        | [Γ, x : mlhypS _ ⊢ #q[..]] ⇒ lookup ci' [Γ ⊢ #q]
+        | [Γ, x : mlhypS _ ⊢ #p.1[..]] ⇒ lookup ci' [Γ ⊢ #p.1])
+  | ctxInSig/e ci' isig ⇒
+      (case h of
+        | [Γ, b:block(x:mlhypS _,y:melig x) ⊢ b.1] ⇒ isig
+        | [Γ, b:block(x:mlhypS _,y:melig x) ⊢ #q[..]] ⇒ lookup ci' [Γ ⊢ #q]
+        | [Γ, b:block(x:mlhypS _,y:melig x) ⊢ #p.1[..]] ⇒ lookup ci' [Γ ⊢ #p.1])
+;
+
+%% If B ∈ A and A ∈ Σ then B ∈ Σ 
+rec subf-inSig : [⊢ subf B A] → [⊢ inSig A Σ] → [⊢ inSig B Σ] =
+/ total 2 /
+fn sf ⇒ fn isig ⇒
+case isig of
+  | [⊢ inSig/here sf'] ⇒
+      let [⊢ S1] = sf in
+      let [⊢ S2] = [⊢ sf'] in
+      ? % TODO
+  | [⊢ inSig/there rest] ⇒
+      let [⊢ R] = subf-inSig sf [⊢ rest] in
+      [⊢ inSig/there R]
+;
+
+%% subf is transitive
+rec subf-trans : [⊢ subf C B] → [⊢ subf B A] → [⊢ subf C A] =
+/ total 2 /
+fn s1 ⇒ fn s2 ⇒
+case s2 of
+  | [⊢ subf/refl] ⇒ s1
+  | [⊢ subf/⊃1 S] ⇒ let [⊢ R] = subf-trans s1 [⊢ S] in [⊢ subf/⊃1 R]
+  | [⊢ subf/⊃2 S] ⇒ let [⊢ R] = subf-trans s1 [⊢ S] in [⊢ subf/⊃2 R]
 ;
 
 
-inductive subfProp : {Γ : mlctx} {D : [Γ ⊢ mlconcS A[]]} ctype =
-  | subfProp/initial/ne : (#h : #[Γ ⊢ mlhypS A[]])
-			  subctx [Γ] [⊢ A] → subfProp [Γ] [Γ ⊢ mlinitialS #h]
-    | subfProp/initial/e : #[Γ ⊢ block(h : mlhypS A[], y : melig h)] →
-			   subctx [Γ] [⊢ A] → subfProp [Γ] [Γ ⊢ mlinitialS #h]
-    | subfProp/⊃R : subfProp [Γ, x : mlhypS A[]] [Γ, x : mlhypS A[] ⊢ D]
-		    → subfProp [Γ] [Γ ⊢ m⊃lRS (\x. D[..,x])]
-    | subfProp/* : subfProp* [Γ] [Γ ⊢ D]
-		   → subfProp [Γ] [Γ ⊢ mlconcS/* D]
-    | subfProp/snip1 : subfProp* [Γ] [Γ ⊢ D]
-		       → subfProp [Γ, x : mlhypS A[]] [Γ, x : mlhypS A[] ⊢ E]
-		       → subfProp [Γ] [Γ ⊢ mlsnip1S D (\x. E[..,x])]
-    | subfProp/snip2 : subfProp [Γ] [Γ ⊢ D] →
-		       subfProp [Γ, b:block(x : mlhypS A[], y : melig x)]
+%% The subformula property:
+
+inductive subfProp : {Γ : mlctx} {Σ : [⊢ formlist]}
+		     {D : [Γ ⊢ mlconcS A[]]} ctype =
+  | subfProp/initial/ne : {#h : #[Γ ⊢ mlhypS A[]]}
+			  → [⊢ inSig A Σ]
+			  → subfProp [Γ] [⊢ Σ] [Γ ⊢ mlinitialS #h]
+  | subfProp/initial/e  : {#h : #[Γ ⊢ block(h : mlhypS A[], y : melig h)]}
+			  → [⊢ inSig A Σ]
+			  → subfProp [Γ] [⊢ Σ] [Γ ⊢ mlinitialS #h.1]
+  | subfProp/⊃R : [⊢ inSig A Σ] → [⊢ inSig B Σ]
+		  → subfProp [Γ, x : mlhypS A[]] [⊢ Σ] [Γ, x : mlhypS A[] ⊢ D]
+		  → subfProp [Γ] [⊢ Σ] [Γ ⊢ m⊃lRS (\x. D[..,x])]
+  | subfProp/* : subfProp* [Γ] [⊢ Σ] [Γ ⊢ D]
+		 → subfProp [Γ] [⊢ Σ] [Γ ⊢ mlconcS/* D]
+  | subfProp/snip1 : subfProp* [Γ] [⊢ Σ] [Γ ⊢ D]
+		     → [⊢ inSig A Σ]
+		     → subfProp [Γ, x : mlhypS A[]] [⊢ Σ] [Γ, x : mlhypS A[] ⊢ E]
+		     → subfProp [Γ] [⊢ Σ] [Γ ⊢ mlsnip1S D (\x. E[..,x])]
+  | subfProp/snip2 : subfProp [Γ] [⊢ Σ] [Γ ⊢ D]
+		     → [⊢ inSig A Σ]
+		     → subfProp [Γ, b:block(x : mlhypS A[], y : melig x)] [⊢ Σ]
 				[Γ, b:block(x : mlhypS A[], y : melig x) ⊢ E]
-		       → subfProp [Γ] [Γ ⊢ mlsnip2S D (\x. \y. E[..,<x;y>])]
-
+		     → subfProp [Γ] [⊢ Σ] [Γ ⊢ mlsnip2S D (\x. \y. E[..,<x;y>])]
 
 and
 
-inductive subfProp* : {Γ : mlctx} {D : [Γ ⊢ mlconcS* A[]]} ctype =
-  | subfProp*/⊃L : (#b : #[Γ ⊢ block(x : mlhypS A[], y : melig x) ])
-		   (#h2 : #[Γ ⊢ mlhypS (A[] m⊃ B[]) ])
-		   subctx [Γ] [⊢ A] → subctx [Γ] [⊢ A m⊃ B]
-		   → subfProp* [Γ] [Γ ⊢ m⊃lL0S #b.1 #h2 #b.2 ]
-
+inductive subfProp* : {Γ : mlctx} {Σ : [⊢ formlist]}
+		      {D : [Γ ⊢ mlconcS* A[]]} ctype =
+  | subfProp*/⊃L : {#b : #[Γ ⊢ block(x : mlhypS A[], y : melig x)]}
+		   {#h2 : #[Γ ⊢ mlhypS (A[] m⊃ B[])]}
+		   → [⊢ inSig A Σ] → [⊢ inSig (A m⊃ B) Σ]
+		   → subfProp* [Γ] [⊢ Σ] [Γ ⊢ m⊃lL0S #b.1 #h2 #b.2]
+  | subfProp*/⊃L2 : {#b : #[Γ ⊢ block(x : mlhypS A[], y : melig x)]}
+		    {#h2 : #[Γ ⊢ block(x : mlhypS (A[] m⊃ B[]), y : melig x)]}
+		    → [⊢ inSig A Σ] → [⊢ inSig (A m⊃ B) Σ]
+		    → subfProp* [Γ] [⊢ Σ] [Γ ⊢ m⊃lL0S #b.1 #h2.1 #b.2]
 
 ;
 
-rec subformula-property : {Γ : mlctx} {D: [Γ ⊢ mlconcS A[]]}
-			  subfProp [Γ] [Γ ⊢ D] =
+
+rec subformula-property : {Γ : mlctx} {D : [Γ ⊢ mlconcS A[]]}
+			  → ctxInSig [Γ] [⊢ Σ]
+			  → [⊢ inSig A Σ]
+			  → subfProp [Γ] [⊢ Σ] [Γ ⊢ D] =
 / total 2 /
-mlam Γ D ⇒
+mlam Γ ⇒ mlam D ⇒ fn ci ⇒ fn goal ⇒
 case [Γ ⊢ D] of
-   | [Γ ⊢ mlinitialS #h] ⇒  subfProp/initial/ne (subctx/ne _ [Γ ⊢ #h] [⊢ subf/refl])
-   | [Γ ⊢ mlsnip1S A (\h. C)] ⇒ let sp1 = subformula-property* _ [Γ ⊢ A] in
-				let sp2 = subformula-property _ [Γ, h:mlhypS _ ⊢ C] in
-				subfProp/snip1 sp1 sp2
-   | [Γ ⊢ mlsnip2S A (\h. \e. C)] ⇒ let sp1 = subformula-property _ [Γ ⊢ A] in
-				    let sp2 = subformula-property _
-							[Γ, b:block(h:mlhypS _, e:melig h) ⊢ C[..,b.1,b.2]] in
-				    subfProp/snip2 sp1 sp2
-   | [Γ ⊢ m⊃lRS (\h. A)] ⇒ let sp1 = subformula-property _ [Γ,  x : mlhypS _ ⊢ A] in
-			   subfProp/⊃R sp1
-   | [Γ ⊢ mlconcS/* D] ⇒ subfProp/* (subformula-property* _ [Γ ⊢ D])
+  | [Γ ⊢ mlinitialS #h] ⇒
+      let isig = lookup ci [Γ ⊢ #h] in
+      subfProp/initial/ne [Γ ⊢ #h] isig
 
+  | [Γ ⊢ mlinitialS #h.1] ⇒
+      let isig = lookup ci [Γ ⊢ #h.1] in
+      subfProp/initial/e [Γ ⊢ #h] isig
 
+  | [Γ ⊢ m⊃lRS (\h. D')] ⇒
+      let [⊢ G] = goal in  % goal : inSig (A m⊃ B) Σ
+      let [⊢ IA] = subf-inSig [⊢ subf/⊃1 subf/refl] goal in
+      let [⊢ IB] = subf-inSig [⊢ subf/⊃2 subf/refl] goal in
+      let ci' = ctxInSig/ne ci [⊢ IA] in
+      let sp = subformula-property _ [Γ, x : mlhypS _ ⊢ D'] ci' [⊢ IB] in
+      subfProp/⊃R [⊢ IA] [⊢ IB] sp
 
-   | [Γ ⊢ mlinitialS #h.1] ⇒ subfProp/initial/e [Γ ⊢ #h] (subctx/e _ [Γ ⊢ #h] [⊢ subf/refl])
+  | [Γ ⊢ mlconcS/* D'] ⇒
+      subfProp/* (subformula-property* _ [Γ ⊢ D'] ci goal)
+
+  | [Γ ⊢ mlsnip1S D' (\h. E')] ⇒ ?
+
+  | [Γ ⊢ mlsnip2S D' (\h. \e. E')] ⇒ ?
 
 and
-rec subformula-property* : {Γ : mlctx} {D: [Γ ⊢ mlconcS* A[]]}
-			   subfProp* [Γ] [Γ ⊢ D] =
+rec subformula-property* : {Γ : mlctx} {D : [Γ ⊢ mlconcS* A[]]}
+			   → ctxInSig [Γ] [⊢ Σ]
+			   → [⊢ inSig A Σ]
+			   → subfProp* [Γ] [⊢ Σ] [Γ ⊢ D] =
 / total 2 /
-mlam Γ D ⇒
+mlam Γ ⇒ mlam D ⇒ fn ci ⇒ fn goal ⇒
 case [Γ ⊢ D] of
-  | [Γ ⊢ m⊃lL0S #h1.1 #h2 #h1.2] ⇒ subfProp*/⊃L (subctx/e _ [Γ ⊢ #h1] [⊢ subf/refl]) (subctx/ne _ [Γ ⊢ #h2] [⊢ subf/refl])
-  | [Γ ⊢ m⊃lL0S #h1.1 #h2.1 #h1.2] ⇒  subfProp*/⊃L (subctx/e _ [Γ ⊢ #h1] [⊢ subf/refl]) (subctx/e _ [Γ ⊢ #h2] [⊢ subf/refl])
+  | [Γ ⊢ m⊃lL0S #h1.1 #h2 #h1.2] ⇒
+      let ie = lookup ci [Γ ⊢ #h1.1] in
+      let ine = lookup ci [Γ ⊢ #h2] in
+      subfProp*/⊃L [Γ ⊢ #h1] [Γ ⊢ #h2] ie ine
+
+  | [Γ ⊢ m⊃lL0S #h1.1 #h2.1 #h1.2] ⇒
+      let ie1 = lookup ci [Γ ⊢ #h1.1] in
+      let ie2 = lookup ci [Γ ⊢ #h2.1] in
+      subfProp*/⊃L2 [Γ ⊢ #h1] [Γ ⊢ #h2] ie1 ie2
 ;
