@@ -77,20 +77,6 @@ case ci of
         | [Γ, b:block(x:mlhypS _,y:melig x) ⊢ #p.1[..]] ⇒ lookup ci' [Γ ⊢ #p.1])
 ;
 
-%% If B ∈ A and A ∈ Σ then B ∈ Σ 
-rec subf-inSig : [⊢ subf B A] → [⊢ inSig A Σ] → [⊢ inSig B Σ] =
-/ total 2 /
-fn sf ⇒ fn isig ⇒
-case isig of
-  | [⊢ inSig/here sf'] ⇒
-      let [⊢ S1] = sf in
-      let [⊢ S2] = [⊢ sf'] in
-      ? % TODO
-  | [⊢ inSig/there rest] ⇒
-      let [⊢ R] = subf-inSig sf [⊢ rest] in
-      [⊢ inSig/there R]
-;
-
 %% subf is transitive
 rec subf-trans : [⊢ subf C B] → [⊢ subf B A] → [⊢ subf C A] =
 / total 2 /
@@ -101,6 +87,22 @@ case s2 of
   | [⊢ subf/⊃2 S] ⇒ let [⊢ R] = subf-trans s1 [⊢ S] in [⊢ subf/⊃2 R]
 ;
 
+%% If B ∈ A and A ∈ Σ then B ∈ Σ 
+rec subf-inSig : [⊢ subf B A] → [⊢ inSig A Σ] → [⊢ inSig B Σ] =
+/ total 2 /
+fn sf ⇒ fn isig ⇒
+case isig of
+  | [⊢ inSig/here sf'] ⇒
+    let [⊢ R] = subf-trans sf [⊢ sf'] in
+    [⊢ inSig/here R]
+  % | [⊢ inSig/here sf'] ⇒
+  %     let [⊢ S1] = sf in
+  %     let [⊢ S2] = [⊢ sf'] in
+  %     ? 
+  | [⊢ inSig/there rest] ⇒
+      let [⊢ R] = subf-inSig sf [⊢ rest] in
+      [⊢ inSig/there R]
+;
 
 %% The subformula property:
 
