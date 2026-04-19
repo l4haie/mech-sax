@@ -104,6 +104,23 @@ case isig of
       [⊢ inSig/there R]
 ;
 
+% If D :: Γ ⊢ A* and every hypothesis in Γ is a subformula of some
+% formula in Σ, then A* is also a subformula of some formula in Σ.
+% We can't just `lookup` since A* is not necessarily a hypothesis in Γ
+rec eligInSig : {Γ : mlctx} {D : [Γ ⊢ mlconcS* A[]]}
+                   → ctxInSig [Γ] [⊢ Σ]
+                   → [⊢ inSig A Σ] =
+/ total 1 /
+mlam Γ ⇒ mlam D ⇒ fn ci ⇒
+case [Γ ⊢ D] of
+  | [Γ ⊢ m⊃lL0S #h1.1 #h2 #h1.2] ⇒ 
+      let ine = lookup ci [Γ ⊢ #h2] in 
+      subf-inSig [⊢ subf/⊃2 subf/refl] ine
+  | [Γ ⊢ m⊃lL0S #h1.1 #h2.1 #h1.2] ⇒
+      let ine = lookup ci [Γ ⊢ #h2.1] in
+      subf-inSig [⊢ subf/⊃2 subf/refl] ine
+;
+
 %% The subformula property:
 
 inductive subfProp : {Γ : mlctx} {Σ : [⊢ formlist]}
@@ -144,7 +161,6 @@ inductive subfProp* : {Γ : mlctx} {Σ : [⊢ formlist]}
 
 ;
 
-
 rec subformula-property : {Γ : mlctx} {D : [Γ ⊢ mlconcS A[]]}
 			  → ctxInSig [Γ] [⊢ Σ]
 			  → [⊢ inSig A Σ]
@@ -171,7 +187,12 @@ case [Γ ⊢ D] of
   | [Γ ⊢ mlconcS/* D'] ⇒
       subfProp/* (subformula-property* _ [Γ ⊢ D'] ci goal)
 
-  | [Γ ⊢ mlsnip1S D' (\h. E')] ⇒ ?
+  | [Γ ⊢ mlsnip1S D' (\h. E')] ⇒
+    let isig = eligInSig [Γ] [Γ ⊢ D'] ci in
+    let ci' = ctxInSig/ne ci isig in
+    let sp1 = subformula-property* [Γ] [Γ ⊢ D'] ci isig in
+    let sp2 = subformula-property [Γ, h : mlhypS _] [Γ, h : mlhypS _ ⊢ E'] ci' goal in
+    subfProp/snip1 sp1 isig sp2
 
   | [Γ ⊢ mlsnip2S D' (\h. \e. E')] ⇒ ?
 
