@@ -1,0 +1,100 @@
+Structure of the paper
+======================
+
+0. Abstract
+-----------
+It's an abstract, should be the last thing we write.
+
+
+1. Introduction
+---------------
+How I would structure the paragraphs:
+
+- Curry-Howard isomorphism spiel borrowed from the paper
+
+- SAX: Present SAX in one paragraph, how it arises from G3 by replacing 
+  noninvertible rules with axioms and invertible rules are left unchanged. Maybe
+  plug in one sentence about the computational interpretation.
+
+- Overview of the proof theory: Resulting proof system proves the same sequents,
+  but the proof theory is more subtle: explain that standard cut-elimination
+  fails, explain why, and how it's replaced by a modified form of
+  cut-elimination where certain analytic cuts (snips) are permitted to remain in
+  normal-form proofs while preserving the subformula property.
+
+- Mechanizing the proof theory: proofs of cut admissibility and of the
+  subformula property are more involved because we need to track which formula
+  occurences are eligible for a snip and which are irrelevant. Explain the
+  structure of the proofs and why this makes it an interesting target for
+  mechanization. 
+
+- Contributions: "In this paper, we report on a mechanization of the proof 
+  theory of SAX in Beluga, ..." Description of Beluga. Explain why Beluga is (or
+  isn't) a good fit for this project. State our main contributions more
+  explicitly. "We also describe the challenges encountered in ...". End with the
+  classic "This is to the best of our knowledge the first mechanization of SAX's
+  proof theory...". Also make it clear that we mechanize a representative subset
+  of SAX.
+
+- Structure of the paper: "The remainder of the paper is organized as follow..."
+
+
+2. Motivation
+-------------
+Not too sure about this part, but I would focus on 2 things:
+
+- Significance of SAX as a proof system. Computational interpretation:
+  shared memory concurrency but also as an intermediate representation for an
+  imperative language that allows you to reason about low-level behaviour such
+  as pointers manipulation and so on. Subformula property also allows us to
+  reason about heap states statically and to apply several compiler
+  optimizations. Can also discuss adjoint logic and message-passing.
+
+- Importance of mechanization. Limitations of on paper proofs and why this is
+  even more so apparent in this paper: Lots of proofs are not explicitly written
+  down, a lot is left implicit (connect the implicit part with eligibility and
+  irrelevance). Use this as an opportunity to extend on eligibility and
+  irrelevance, show some examples from the paper. Discuss some of the
+  complexities encountered during the mechanization related to the points made.
+
+Most important examples to include here: transitivity proof where we can't
+eliminate the cut on B, its corresponding derivation with a snip to show how
+eligibility is propagated, and the principal case for implication where
+elibility is lost (main argument as to why tracking eligibility adds a lot of
+complexity to the cut admissibility proof).
+
+
+3. Contributions
+----------------
+You know, what we'll deliver:
+
+- State explicitly the proof-theoretic results that we prove (translation
+  between G3 and SAX, cut admissibility, cut-elimination, subformula property)
+
+- How we encode SAX in Beluga: LF representation of rules, schemas, and so
+  on. Explain our design choices, why we chose to represent eligibility this
+  way, why we don't track irrelevance.
+
+- Translation between G3 and SAX
+
+- Cut admissibility and cut elimination. Give an actual on paper proof and show
+  the corresponding implementation. Best case is again the principal case for
+  implication.
+
+- Subformula property.
+
+
+4. Related work
+---------------
+- What we already cited in the slides.
+- Frank's proof of cut admissibility in Twelf and how it differs from ours.
+- ...?
+
+
+5. Conclusion (and future work)
+------------------------------
+- Classic recap
+- Future work: discuss what we didn't have time to do (and why), explain how we
+  had planned (concretely) to represent configurations and how we could prove
+  type progress
+
