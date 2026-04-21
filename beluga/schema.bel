@@ -1,17 +1,16 @@
 schema ctx = hyp a;
 schema ctxS = hypS a;
-schema mctxS = mhypS a;
-schema mlctx =  block(h : mlhypS a, mh : melig h) + mlhypS a;
+schema lctxS = lhypS a;
 
 
 inductive rel-ctx-S : {Γ : ctx} {Γ' : ctxS} ctype =
   | nil-S :  rel-ctx-S [] []
   | cons-S : rel-ctx-S [Γ] [Γ']
-	     → rel-ctx-S [Γ, x:hyp a[]] [Γ', x : hypS a[]]
+         → rel-ctx-S [Γ, x:hyp a[]] [Γ', x : hypS a[]]
 ;
 
 inductive rel-S-ctx : {Γ' : ctxS} {Γ : ctx} ctype =
   | S-nil :  rel-S-ctx [] []
   | S-cons : rel-S-ctx [Γ'] [Γ]
-	     → rel-S-ctx [Γ', x:hypS a[]] [Γ, x : hyp a[]]
+         → rel-S-ctx [Γ', x:hypS a[]] [Γ, x : hyp a[]]
 ;

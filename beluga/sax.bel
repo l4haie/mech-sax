@@ -12,7 +12,7 @@ LF o : type =  % formulas
 --infix ⊃ 4 right.
 
 
-%Sequent Calculus
+% Sequent Calculus
 LF hyp  : o → type = ;  % Hypotheses (left)
 LF conc : o → type =    % Conclusion (right)
   | initial : (hyp A → conc A)
@@ -45,30 +45,8 @@ LF conc : o → type =    % Conclusion (right)
 	    → (hyp unit → conc C)
 ;
 
-%Mini-Sequent:
 
-LF mhyp  : o → type = ;  % Hypotheses (left)
-LF mconc : o → type =    % Conclusion (right)
-  | minitial : (mhyp A → mconc A)
-  | m⊃R  : (mhyp A → mconc B) →
-	   mconc (A ⊃ B)
-  | m⊃L  : mconc A →
-	   (mhyp B → mconc C) →
-	   mhyp (A ⊃ B)
-	   → mconc C
-  | m⊗R  : mconc A → mconc B →
-	   mconc (A ⊗ B)
-  | m⊗L : (mhyp A → mhyp B → mconc C)
-	  → (mhyp (A ⊗ B) → mconc C)
-  | munitR : mconc unit
-  | munitL : mconc C
-	     → (mhyp unit → mconc C)
-;
-
-
-
-%SAX
-
+% Semi-Axiomatic Sequent Calculus
 LF hypS : o → type = ;
 LF concS : o → type =
   | initialS : (hypS A → concS A)
@@ -89,23 +67,4 @@ LF concS : o → type =
   | unitRS : concS unit
   | unitLS : concS C
 	     → (hypS unit → concS C)
-;
-
-
-
-
-%mini SAX
-
-LF mhypS : o → type = ;
-LF mconcS : o → type =
-  | minitialS : (mhypS A → mconcS A)
-  | m⊃RS  : (mhypS A → mconcS B) →
-	    mconcS (A ⊃ B)
-  | m⊃L0S  : mhypS A → mhypS (A ⊃ B) → mconcS B
-  | m⊗R0S  : (mhypS A → mhypS B → mconcS (A ⊗ B))
-  | m⊗LS : (mhypS A → mhypS B → mconcS C)
-	   → (mhypS (A ⊗ B) → mconcS C)
-  | munitRS : mconcS unit
-  | munitLS : mconcS C
-	      → (mhypS unit → mconcS C)
 ;

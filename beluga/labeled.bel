@@ -1,173 +1,64 @@
-LF lhyp : o → type = ;
+% Soprillo (Mini SAX), labelled rules
 
-%% Predicates over hypothesis variables, in the style of Crary.
-%% elig h  means h is eligible (x* in the paper)
-%% irrel h means h is irrelevant (x⁰ in the paper)
-LF elig  : lhyp A → type = ;
-LF irrel : lhyp A → type = ;
-
-%% The three axiom rules whose conclusions are starred.
-LF lconcS* : o → type =
-
-  %% Γ⁰, y*:A, x:A⊃B ⊢ z*:B
-  | ⊃lL0S  : {h1 : lhyp A} {h2 : lhyp (A ⊃ B)}
-	     elig h1 → irrel h2
-	     → lconcS* B
-
-  %% Γ⁰, x:A&B ⊢ y*:A
-  | &lL01S : {h : lhyp (A & B)}
-	     irrel h
-	     → lconcS* A
-
-  %% Γ⁰, x:A&B ⊢ z*:B
-  | &lL02S : {h : lhyp (A & B)}
-	     irrel h
-	     → lconcS* B
-;
+LF lhypS : o → type = ;
 
 LF lconcS : o → type =
+  | linitialS : {h : lhypS A} lconcS A
 
-  %% Γ⁰, x:A ⊢ y:A     (x is irrelevant side formula)
-  | linitialS : {h : lhyp A} irrel h
-		→ lconcS A
+  | l⊃RS : (lhypS A → lconcS B)
+           → lconcS (A ⊃ B)
+                
+  | l⊃L0S : lhypS A → lhypS (A ⊃ B) → lconcS B
+                                         
+  | lsnip1S : {D : lconcS A} elig_c D → (lhypS A → lconcS B)
+              → lconcS B
 
-  %% Γ ⊢ x:A    Γ, x:A ⊢ z:C
-  | lcutS     : lconcS A
-		→ (lhyp A → lconcS C)
-		→ lconcS C
+  | lsnip2S : lconcS A → {E : lhypS A → lconcS B} elig_h E
+              → lconcS B
+                       
+and
 
-  %% Γ ⊢ x*:A    Γ, x:A ⊢ z:C
-  | lsnip1S   : lconcS* A
-		→ (lhyp A → lconcS C)
-		→ lconcS C
+LF elig_c : lconcS A → type =
+  | elig_c/l⊃L0S : {x : lhypS A} {y : lhypS (A ⊃ B)}
+                   elig_c (l⊃L0S x y)
 
-  %% Γ ⊢ x:A    Γ, x*:A ⊢ z:C
-  | lsnip2S   : lconcS A
-		→ ({h : lhyp A} elig h → lconcS C)
-		→ lconcS C
+and
 
-  %% Γ, y:A ⊢ z:B
-  | ⊃lRS      : (lhyp A → lconcS B)
-		→ lconcS (A ⊃ B)
-
-  %% Γ⁰, y*:A, z*:B ⊢ x:A⊗B
-  | ⊗lR0S     : {h1 : lhyp A} {h2 : lhyp B}
-		elig h1 → elig h2
-		→ lconcS (A ⊗ B)
-
-  %% Γ, x:A⊗B, y:A, z:B ⊢ w:C
-  | ⊗lLS      : (lhyp A → lhyp B → lconcS C)
-		→ lhyp (A ⊗ B)
-		→ lconcS C
-
-  %% Γ⁰ ⊢ x:1
-  | unitlR0S  : lconcS unit
-
-  %% Γ ⊢ w:C     (x:1 is irrelevant side formula)
-  | unitlLS   : ({h : lhyp unit} irrel h → lconcS C)
-		→ lconcS C
-
-  %% Γ ⊢ y:A    Γ ⊢ z:B
-  | &lRS      : lconcS A → lconcS B
-		→ lconcS (A & B)
-
-  %% Γ⁰, x*:A ⊢ z:A∨B
-  | ∨lR01S    : {h : lhyp A} elig h
-		→ lconcS (A ∨ B)
-
-  %% Γ⁰, y*:B ⊢ z:A∨B
-  | ∨lR02S    : {h : lhyp B} elig h
-		→ lconcS (A ∨ B)
-
-  %% Γ, z:A∨B, x:A ⊢ w:C    Γ, z:A∨B, y:B ⊢ w:C
-  | ∨lLS      : (lhyp A → lconcS C)
-		→ (lhyp B → lconcS C)
-		→ lhyp (A ∨ B)
-		→ lconcS C
+LF elig_h : (lhypS A → lconcS B) → type =
+  | elig_h/l⊃L0S : {y : lhypS (A ⊃ B)}
+                   elig_h (\x. l⊃L0S x y)
 ;
 
 
+% Soprillo with cut for cut-elimination
 
-% Soprillo (Mini SAX)
-
-LF mo : type =  % formulas
-  | m⊃ : mo → mo → mo
-  % | m⊗ : mo → mo → mo
-;
-
-% --infix m⊗ 7 right.
---infix m⊃ 3 right.
-
-LF mlhypS : mo → type = ;
-
-LF melig  : mlhypS A → type = ;
-%LF mirrel : mlhypS A → type = ;
-
-% Starred conclusions
-LF mlconcS* : mo → type =
-  | m⊃lL0S : {h1 : mlhypS A} {h2 : mlhypS (A m⊃ B)}
-	     melig h1
-	     %→ mirrel h2
-	     → mlconcS* B
-;
-
-% Regular conclusions
-LF mlconcS : mo → type =
-  | mlinitialS : {h : mlhypS A}
-		 %mirrel h
-		 → mlconcS A
-
-  | mlsnip1S : mlconcS* A
-	       → (mlhypS A → mlconcS C)
-	       → mlconcS C
-
-  | mlsnip2S : mlconcS A
-	       → ({h : mlhypS A} melig h → mlconcS C)
-	       → mlconcS C
-
-  | m⊃lRS : (mlhypS A → mlconcS B)
-	        → mlconcS (A m⊃ B)
-
-  % | m⊗lLS : (mlhypS (A m⊗ B) → mlhypS A → mlhypS B → mlconcS C)
-  %   	    → mlhypS (A m⊗ B)
-  %   	    → mlconcS C
-                 
-  % | m⊗lR0S : {h1 : mlhypS A} {h2 : mlhypS B}
-  %          melig h1 → melig h2
-  %          → mlconcS (A m⊗ B)
-                      
-  | mlconcS/* : mlconcS* A → mlconcS A
-;
-
-
-% Mini SAX with cut (for cut elimination)
-LF mlconcSC : mo → type =
-  | mlcutSC : mlconcSC A
-              → (mlhypS A → mlconcSC C)
-              → mlconcSC C
-
-  | mlinitialSC : {h : mlhypS A}
-		 %mirrel h
-		 → mlconcSC A
-
-  | mlsnip1SC : mlconcS* A
-	       → (mlhypS A → mlconcSC C)
-	       → mlconcSC C
-
-  | mlsnip2SC : mlconcSC A
-	       → ({h : mlhypS A} melig h → mlconcSC C)
-	       → mlconcSC C
-
-  | m⊃lRSC : (mlhypS A → mlconcSC B)
-	        → mlconcSC (A m⊃ B)
-
-  % | m⊗lLSC : (mlhypS (A m⊗ B) → mlhypS A → mlhypS B → mlconcSC C)
-  %   	→ mlhypS (A m⊗ B)
-  %   	→ mlconcSC C
-                 
-  % | m⊗lR0SC : {h1 : mlhypS A} {h2 : mlhypS B}
-  %          melig h1 → melig h2
-  %          → mlconcSC (A m⊗ B)
+LF lconcS-cut : o → type =
+  | linitialS-cut : {h : lhypS A} lconcS-cut A
+                    
+  | l⊃RS-cut : (lhypS A → lconcS-cut B)
+               → lconcS-cut (A ⊃ B)
                      
-  | mlconcS/*C : mlconcS* A → mlconcSC A
+  | l⊃L0S-cut : lhypS A → lhypS (A ⊃ B)
+                → lconcS-cut B
+                        
+  | lcutS-cut : lconcS-cut A → (lhypS A → lconcS-cut B)
+                → lconcS-cut B
+                        
+  | lsnip1S-cut : {D : lconcS-cut A} elig_c-cut D → (lhypS A → lconcS-cut B)
+                  → lconcS-cut B
+                  
+  | lsnip2S-cut : lconcS-cut A → {E : lhypS A → lconcS-cut B} elig_h-cut E
+                  → lconcS-cut B
+                  
+and
+
+LF elig_c-cut : lconcS-cut A → type =
+  | elig_c/l⊃L0S-cut : {x : lhypS A} {y : lhypS (A ⊃ B)}
+                       elig_c-cut (l⊃L0S-cut x y)
+                       
+and
+
+LF elig_h-cut : (lhypS A → lconcS-cut B) → type =
+  | elig_h/l⊃L0S-cut : {y : lhypS (A ⊃ B)}
+                       elig_h-cut (\x. l⊃L0S-cut x y)
 ;
