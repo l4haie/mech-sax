@@ -1,3 +1,21 @@
 \begin{abstract}
+  % FIXME mention original authors in the abstract?
+  The semi-axiomatic sequent calculus (SAX), introduced by DeYoung, Pfenning,
+  and Pruiksma, arises from the standard sequent calculus $G_3$ by replacing all
+  noninvertible rules with axioms while leaving invertible rules unchanged. The
+  resulting proof system is equivalent to $G_3$ except that standard
+  cut-elimination fails, and is replaced by a modified form in which certain
+  analytic cuts, called snips, are permitted to remain in normal-form proofs
+  while preserving the subformula property. SAX admits a natural computational
+  interpretation as a form of shared memory concurrency.
 
+  % FIXME not sure if we should describe eligibility in the abstract
+  This paper presents a mechanization of the proof theory of SAX in the proof
+  assistant Beluga. A central challenge is the need to track eligibility, a
+  property of formula occurrences that identifies subformulas of principal
+  formulas introduced in axioms that are eligible for a snip. We describe how
+  eligibility is represented in Beluga as a predicate over derivations, and
+  present mechanized proofs of the admissibility of cut and the subformula
+  property for a representative fragment of SAX. To our knowledge, this is the
+  first mechanization of SAX proof theory.
 \end{abstract}
