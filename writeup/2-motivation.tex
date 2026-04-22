@@ -1,2 +1,33 @@
 \section{Motivation}
 \label{section:motivation}
+
+\subsection{Computational Interpretation of SAX}
+
+Beyond its proof-theoretic results, SAX admits a natural operational
+interpretation as a system of concurrent processes that interact
+asynchronously. This interpretation has been studied across several
+computational models, from shared memory concurrency \cite{DeYoung2020}
+to message-passing concurrency \cite{}, and each of these interpretations has
+been shown to satisfy desirable properties such as progress, preservation,
+confluence, and termination. Specifically, under the shared memory
+interpretation, variables are substituted by addresses at runtime, and thus the
+sequent
+\[
+  x_1 : A_1, \ldots, x_n : A_n \vdash P :: (z : C)
+\]
+should be understood as typing a process $P$ that reads from addresses $x_1,
+\ldots, x_n$ and writes to address $z$. The operational behaviour of processes
+is then determined by the rules of the proof system, for instance cut and
+snip allocates a fresh memory cell, spawning a writer process and a reader
+process that synchronize through it, and process expressions assigned to right
+rules write to memory while those assigned to left rules read from it.
+
+This low-level interpretation of SAX further gives rise, in extensions of SAX,
+to type-theoretically justified compiler optimizations such as in-place memory
+reuse \cite{}. Extensions of SAX in adjoint logic have also served as the
+logical foundation for concurrent language implementations \cite{}. A
+mechanization of SAX's proof theory therefore provides higher confidence in the
+theoretical foundations underlying these results.
+
+
+\subsection{Mechanization}

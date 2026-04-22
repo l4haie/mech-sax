@@ -1,2 +1,43 @@
 \section{Contributions}
 \label{section:contribution}
+
+\subsection{Core Proof-Theoretic Results}
+
+Listed below are the proof-theoretic results that we have mechanized for our
+representative subset of SAX, covering identity ($\texttt{id}$), implication
+(${\supset}R$, ${\supset}L^0$), tensor (${\otimes}R^0$, ${\otimes}L$),
+and snips ($\texttt{snip}^1$, $\texttt{snip}^2$). 
+
+\begin{theorem}[Translations between $G_3$ and SAX]
+  $\Gamma \vdash A$ in $G_3$ iff $\Gamma \vdash A$ in SAX.
+\end{theorem}
+
+In the following theorems, we say a derivation is cut-free if it contains
+no uses of cut, but may contain snips.
+
+\begin{theorem}[Admissibility of Cut]
+  If there are cut-free derivations of $\Gamma \vdash x : A$ and
+  $\Gamma, x : A \vdash z : C$, then there exists a cut-free derivation
+  of $\Gamma \vdash z : C$.
+\end{theorem}
+
+\begin{theorem}[Cut Elimination in SAX]
+  If there is a derivation of $\Gamma \vdash x : A$, then there is a
+  cut-free derivation of the same sequent.
+\end{theorem}
+
+\begin{theorem}[Subformula Property]
+  All formulas in a cut-free derivation of $\Gamma \vdash x : A$ are
+  subformulas of formulas in $\Gamma$ or $A$.
+\end{theorem}
+
+
+\subsection{Encoding SAX in Beluga}
+
+\subsection{Eligibility and Irrelevance}
+
+\subsection{Translation Between G3 and SAX}
+
+\subsection{Admissibility of Cut and Cut Elimination}
+
+\subsection{Subformula Property}
