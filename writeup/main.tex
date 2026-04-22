@@ -63,6 +63,22 @@
 }
 \newcommand{\pstep}[3]{#1. & $#2$ & #3 \\}
 
+% Basic lstset for Beluga code
+\usepackage{listings}
+\lstset{
+  basicstyle=\ttfamily\small,
+  columns=flexible,
+  keepspaces=true,
+  literate=
+    {⊃}{{$\supset$}}1
+    {⊗}{{$\otimes$}}1
+    {∨}{{$\lor$}}1
+    {∧}{{$\land$}}1
+    {⊢}{{$\vdash$}}1
+    {→}{{$\to$}}1
+    {←}{{$\leftarrow$}}1
+    {Γ}{{$\Gamma$}}1
+}
 
 \begin{document}
 

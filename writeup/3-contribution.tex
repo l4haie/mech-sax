@@ -36,6 +36,23 @@ no uses of cut, but may contain snips.
 
 \subsection{Eligibility and Irrelevance}
 
+\begin{lstlisting}
+  LF lconcS : o → type =
+    ...
+    | l⊃RS : (lhypS A → lconcS B) → lconcS (A ⊃ B)
+    | l⊃L0S : lhypS A → lhypS (A ⊃ B) → lconcS B
+    ...    
+  and
+  LF elig_c : lconcS A → type =
+    | elig_c/l⊃L0S : {x : lhypS A} {y : lhypS (A ⊃ B)}
+                     elig_c (l⊃L0S x y)
+  and
+  LF elig_h : (lhypS A → lconcS B) → type =
+    | elig_h/l⊃L0S : {y : lhypS (A ⊃ B)}
+                     elig_h (\x. l⊃L0S x y)
+  ;
+\end{lstlisting}
+
 \subsection{Translation Between G3 and SAX}
 
 \subsection{Admissibility of Cut and Cut Elimination}
