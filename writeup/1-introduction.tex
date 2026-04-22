@@ -1,10 +1,9 @@
 \section{Introduction}
-The Curry-Howard isomorphism shows the deep relationship between intuitionistic logic and computation. Specifically, it establishes that proofs can be interpreted as programs and proof reduction as computation. Because of this, we can see that the different formalizations of intuitionistic logic will result in different computational interpretations. Howard, for example, established the connection between natural deduction and the simply-typed $\lambda$-calculus. Curry took a different approach, associating Hilbert-style proofs to combinators. Herbelin established the system LJT based on the sequent calculus with a stoup, leading to a computational interpretation featuring explicit substitutions. 
+The Curry-Howard isomorphism shows the deep relationship between intuitionistic logic and computation. Specifically, it establishes that proofs can be interpreted as programs and proof reduction as computation. Because of this, we can see that the different formalizations of intuitionistic logic will result in different computational interpretations~\cite{DeYoung2020}. Howard~\cite{Howard1980FormulaeAsTypes}, for example, established the connection between natural deduction and the simply-typed $\lambda$-calculus. Curry~\cite{doi:10.1073/pnas.20.11.584} took a different approach, associating Hilbert-style proofs to combinators. Herbelin~\cite{Herbelin1995LambdaCalculusStructure} established the system LJT based on the sequent calculus with a stoup, leading to a computational interpretation featuring explicit substitutions. 
 
 Adding to this lineage, DeYoung et al.~\cite{DeYoung2020} presents the semi-axiomatic sequent calculus (SAX), a formalization of intuitionistic logic which arises from by replacing all non-invertible rules in the sequent calculus with axioms.
 
-We note that the rules that are maintaned from the standard sequent calculus (invertible rules) are the right rules from negative connectives ($A \supset B$, $A \& B$), and the left rules of positive connectives ($A \otimes B$, $\textbf{1}$, $A \lor B$)~\cite{DeYoung2020}. These rules can be seen as asynchronous in that they can be applied eagerly in bottom-up proof construction. Conversely, the left rules of negative connectives and the right rules of positive connectives may be postponed~\cite{DeYoung2020}. These properties, along with t
-
+We note that the rules that are maintaned from the standard sequent calculus (invertible rules) are the right rules from negative connectives ($A \supset B$, $A \& B$), and the left rules of positive connectives ($A \otimes B$, $\textbf{1}$, $A \lor B$)~\cite{DeYoung2020}. These rules can be seen as asynchronous in that they can be applied eagerly in bottom-up proof construction. Conversely, the left rules of negative connectives and the right rules of positive connectives may be postponed~\cite{DeYoung2020}. These properties, along with SAX's cut elimination, form the first seeds of intuition for its computational interpretation~\cite{DeYoung2020}.
 \begin{figure}[ht!]
 \[
   \infer[\mathsf{Id}_A]{\Gamma, A \vdash A}{}
@@ -44,4 +43,90 @@ We note that the rules that are maintaned from the standard sequent calculus (in
 \label{fig:sax-rules}
 \end{figure}
 
+While the resulting system is sound and complete with respect to the sequent calculus, its proof theory contains many more intricacies than that of the sequent calculus. For example, the system, as articulated in figure 1, is not cut-admissible~\cite{DeYoung2020}. Though, we can restrict the system to a form of analytic cuts, snips, and retain a (general) cut-free proof~\cite{DeYoung2020}. These snips require that the cut formula in at least one of the premises originate from an axiom~\cite{DeYoung2020}. With their addition, SAX also satisfies the subformula property~\cite{DeYoung2020}. In order to track the origins of each formula,~\cite{DeYoung2020} introduces a labelling system, marking formulas $y^*: A$ as eligible for a snip. We can then propogate this through the proof by marking a variable as eligible in the conclusion if it is eligible in at least one of its premises~\cite{DeYoung2020}. Since the application of axioms can contain antecedents that are irrelevant (antecedents that are not strictly needed for the application of said axiom) we must also track these irrelevant formulas by marking them $x^0: B$. We mark a variable as irrelevant in the conclusion if it is irrelevant in both of its premises~\cite{DeYoung2020}.
 
+\begin{figure}[ht!]
+\[
+  \infer[\text{Id}_A]{\Gamma^0,\; x : A \vdash y : A}{}
+  \qquad
+  \infer[\text{Cut}_A]{\Gamma \vdash z : C}{
+    \Gamma \vdash x : A &
+    \Gamma,\; x : A \vdash z : C
+  }
+\]
+
+\[
+  \infer[\text{Snip}_A^1]{\Gamma \vdash z : C}{
+    \Gamma \vdash x^\ast : A &
+    \Gamma,\; x : A \vdash z : C
+  }
+  \qquad
+  \infer[\text{Snip}_A^2]{\Gamma \vdash z : C}{
+    \Gamma \vdash x : A &
+    \Gamma,\; x^\ast : A \vdash z : C
+  }
+\]
+\[
+  \infer[{\supset}R]{\Gamma \vdash x : A \supset B}{
+    \Gamma,\; y : A \vdash z : B
+  }
+  \qquad
+  \infer[{\supset}L^0]{\Gamma^0,\; y^\ast : A,\; x : A \supset B \vdash z^\ast : B}{}
+\]
+
+\[
+  \infer[{\otimes}R^0]{\Gamma^0,\; y^\ast : A,\; z^\ast : B \vdash x : A \otimes B}{}
+  \qquad
+  \infer[{\otimes}L]{\Gamma,\; x : A \otimes B \vdash w : C}{
+    \Gamma,\; x : A \otimes B,\; y : A,\; z : B \vdash w : C
+  }
+\]
+
+\[
+  \infer[1R^0]{\Gamma^0 \vdash x : 1}{}
+  \qquad
+  \infer[1L]{\Gamma,\; x : 1 \vdash w : C}{
+    \Gamma,\; x : 1 \vdash w : C
+  }
+\]
+
+\[
+  \infer[{\&}R]{\Gamma \vdash x : A \mathbin{\&} B}{
+    \Gamma \vdash y : A &
+    \Gamma \vdash z : B
+  }
+  \qquad
+  \infer[{\&}L_1^0]{\Gamma^0,\; x : A \mathbin{\&} B \vdash y^\ast : A}{}
+  \qquad
+  \infer[{\&}L_2^0]{\Gamma^0,\; x : A \mathbin{\&} B \vdash z^\ast : B}{}
+\]
+
+\end{figure}
+\begin{figure}[t]
+\[
+  \infer[{\lor}R_1^0]{\Gamma^0,\; x^\ast : A \vdash z : A \vee B}{}
+  \qquad
+  \infer[{\lor}R_2^0]{\Gamma^0,\; y^\ast : B \vdash z : A \vee B}{}
+\]
+
+\[
+  \infer[{\lor}L]{\Gamma,\; z : A \vee B \vdash w : C}{
+    \Gamma,\; z : A \vee B,\; x : A \vdash w : C &
+    \Gamma,\; z : A \vee B,\; y : B \vdash w : C
+  }
+\]
+\caption{Labelled SAX~\cite{DeYoung2020}.}
+\label{fig:sax-labelled}
+\end{figure}
+
+This added bookkeeping is precisely what makes the proof theory of SAX an interesting target for mechanization. To prove cut-admissibility, while we can inherit the general approach of a nested structural induction on both derivations and the cut formula from Pfenning~\cite{Pfenning2000StructuralCutElimination}, the sensitivity of snips to the eligibility of the cut-formulas requires us to reason about the eligibility of each cut formula as well as their derivation. This necessitates that a mechanization of SAX tracks eligibility, and that we can reason about it in our case analysis.
+
+As such, we report on a mechanization of the proof theory of Soprillo, a fragment of SAX in Beluga, a proof assistant with its foundations in contextual modal logic and the Logical Framework. Beluga's explicit handling of contexts is particularly suited to mechanizing SAX, precisely because we need to reason about variables in contexts during our proof. Further, since it is an extension of LF, we can build on the existing literature regarding mechanizing similar systems and proofs in the literature~\cite{crary2009substructural}~\cite{Pfenning2000StructuralCutElimination}.
+This, to the best of our knowledge, is the first mechanization of SAX and its proof theory. Specifically, we present:
+\begin{itemize}
+  \item A mechanization of SAX 
+  \item A mechanized proof of the translation theorem between SAX and the sequent calculus
+  \item Mechanized proofs of cut-admissibility, cut-elimination, and the subformula property
+\end{itemize}
+
+%%Something brief about structure once we have a better idea of what it is
