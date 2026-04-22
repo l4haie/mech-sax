@@ -55,6 +55,35 @@ no uses of cut, but may contain snips.
 
 \subsection{Translation Between G3 and SAX}
 
+\begin{lstlisting}
+  rec seq2sax : (A : [⊢ o]) rel-ctx-S [Γ] [Γ'] → [Γ ⊢ conc A[]] → [Γ' ⊢ concS A[]] =
+  / total 2 /
+  fn R D ⇒
+  case D of
+    ...
+    | [Γ ⊢ ⊃L c1 (\h. c2) H] ⇒
+      let [Γ' ⊢ HS] = hyp2hypS R [Γ ⊢ H] in
+      let [Γ' ⊢ c1S] = seq2sax R [Γ ⊢ c1] in
+      let [Γ', x : hypS B[] ⊢ c2S] = seq2sax (cons-S R) [Γ, x : hyp _ ⊢ c2] in
+      [Γ' ⊢ cutS (cutS c1S (\h. ⊃L0S h HS[..])) (\h. c2S)]
+    ...
+  ;
+\end{lstlisting}
+
+\begin{lstlisting}
+  rec sax2seq : (A : [⊢ o]) rel-S-ctx [Γ'] [Γ] → [Γ' ⊢ concS A[]] → [Γ ⊢ conc A[]] =
+  / total 2 /
+  fn R D ⇒
+  case D of
+    ...
+    | [Γ' ⊢ ⊃L0S HS1 HS2] ⇒
+      let [Γ ⊢ H1] = hypS2hyp R [Γ' ⊢ HS1] in
+      let [Γ ⊢ H2] = hypS2hyp R [Γ' ⊢ HS2] in
+      [Γ ⊢ ⊃L (initial H1) (\h. initial h) H2]
+    ...
+  ;
+\end{lstlisting}
+
 \subsection{Admissibility of Cut and Cut Elimination}
 
 \subsection{Subformula Property}
