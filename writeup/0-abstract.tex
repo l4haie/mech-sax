@@ -1,22 +1,43 @@
 \begin{abstract}
-  % FIXME mention original authors in the abstract?
-  The semi-axiomatic sequent calculus (SAX), introduced by DeYoung, Pfenning,
-  and Pruiksma, arises from the standard sequent calculus $G_3$ by replacing all
-  noninvertible rules with axioms while leaving invertible rules unchanged. The
-  resulting proof system is equivalent to $G_3$ except that standard
-  cut-elimination fails, and is replaced by a modified form in which certain
-  analytic cuts, called snips, are permitted to remain in normal-form proofs
-  while preserving the subformula property. SAX admits a natural computational
-  interpretation as a form of shared memory concurrency.
-
-  % FIXME not sure if we should describe eligibility in the abstract
-  This paper presents a mechanization of the proof theory of SAX in the proof
-  assistant Beluga. A central challenge is the need to track eligibility, a
-  property of formula occurrences that identifies subformulas of principal
-  formulas introduced in axioms that are eligible for a snip. We describe how
-  eligibility is represented in Beluga as a predicate over derivations, adapting
-  a technique due to Crary for representing substructural constraints as
-  judgements over proof terms. We present mechanized proofs of the admissibility
-  of cut and the subformula property for a representative subset of SAX. To our
+  This paper presents a work-in-progress mechanization of the proof theory of
+  the semi-axiomatic sequent calculus (SAX) in the proof assistant Beluga. SAX
+  replaces all noninvertible inference rules with axioms, causing standard cut
+  elimination to fail. Instead, SAX satisfies a modified cut elimination theorem
+  permitting certain analytic cuts called snips to remain, where a snip requires
+  the cut formula to be 'eligible', i.e. a subformula of the principal formula
+  of an axiom. A central challenge in mechanizing SAX is therefore tracking
+  eligibility throughout the proof theory. We address this by representing
+  eligibility as a well-formedness predicate embedded directly within proof
+  judgements rather than imposed through a separate context discipline, adapting
+  a technique due to Crary for encoding substructural constraints as judgements
+  over proof terms. This is analogous to how linearity conditions have been
+  previously handled in mechanizations of session-typed systems. Using this
+  technique, we present mechanized proofs of cut admissibility and the
+  subformula property for a representative propositional fragment, and outline a
+  roadmap for extending the mechanization to the full calculus. To our
   knowledge, this is the first mechanization of SAX proof theory.
 \end{abstract}
+
+
+% \begin{abstract}
+%   % FIXME mention original authors in the abstract?
+%   The semi-axiomatic sequent calculus (SAX), introduced by DeYoung, Pfenning,
+%   and Pruiksma, arises from the standard sequent calculus $G_3$ by replacing all
+%   noninvertible rules with axioms while leaving invertible rules unchanged. The
+%   resulting proof system is equivalent to $G_3$ except that standard
+%   cut-elimination fails, and is replaced by a modified form in which certain
+%   analytic cuts, called snips, are permitted to remain in normal-form proofs
+%   while preserving the subformula property. SAX admits a natural computational
+%   interpretation as a form of shared memory concurrency.
+
+%   % FIXME not sure if we should describe eligibility in the abstract
+%   This paper presents a mechanization of the proof theory of SAX in the proof
+%   assistant Beluga. A central challenge is the need to track eligibility, a
+%   property of formula occurrences that identifies subformulas of principal
+%   formulas introduced in axioms that are eligible for a snip. We describe how
+%   eligibility is represented in Beluga as a predicate over derivations, adapting
+%   a technique due to Crary for representing substructural constraints as
+%   judgements over proof terms. We present mechanized proofs of the admissibility
+%   of cut and the subformula property for a representative subset of SAX. To our
+%   knowledge, this is the first mechanization of SAX proof theory.
+% \end{abstract}
