@@ -34,6 +34,7 @@ no uses of cut, but may contain snips.
 
 \subsection{Encoding SAX in Beluga}
 
+
 \subsection{Eligibility and Irrelevance}
 
 \begin{lstlisting}
@@ -52,6 +53,7 @@ no uses of cut, but may contain snips.
                      elig_h (\x. l⊃L0S x y)
   ;
 \end{lstlisting}
+
 
 \subsection{Translation Between G3 and SAX}
 
@@ -84,6 +86,51 @@ no uses of cut, but may contain snips.
   ;
 \end{lstlisting}
 
+
 \subsection{Admissibility of Cut and Cut Elimination}
+
+% Some representative cases, we can remove some or split them up but I'm not
+% sure which one we should actually keep
+\begin{lstlisting}
+  rec cut-admis : {Γ : lctxS} {A : [⊢ o]} [Γ ⊢ lconcS A[]]
+                  → [Γ, x:lhypS A[] ⊢ lconcS C[]]
+                  → [Γ ⊢ lconcS C[]] =
+  / total 1 /
+  mlam Γ A ⇒ fn D E ⇒
+  case (D, E) of
+    %% */_ 
+    | ([Γ ⊢ l⊃L0S h1 h2], [Γ, x : lhypS _ ⊢ E]) ⇒
+      [Γ ⊢ lsnip1S (l⊃L0S h1 h2) (elig_c/l⊃L0S h1 h2) (\h. E[..,h])]
+    %% ⊃R/⊃L0
+    | ([Γ ⊢ l⊃RS (\h. D1)], [Γ, x : lhypS _ ⊢ l⊃L0S h1 h2]) ⇒
+      (case ([Γ, x : lhypS _ ⊢ h2], [Γ, x : lhypS _ ⊢ h1]) of
+        | ([Γ, x : lhypS _ ⊢ x], [Γ, x : lhypS _ ⊢ #h1[..] ]) ⇒
+          [Γ ⊢ D1[..,#h1]]
+        | ([Γ, x : lhypS _ ⊢ #h2[..]], [Γ, x : lhypS _ ⊢ x]) ⇒
+          [Γ ⊢ lsnip2S (l⊃RS (\h. D1)) (\h. l⊃L0S h #h2[..]) (elig_h/l⊃L0S #h2[..])]
+        | ([Γ, x : lhypS _ ⊢ #h2[..]], [Γ, x : lhypS _ ⊢ #h1[..]]) ⇒
+          [Γ ⊢ l⊃L0S #h1 #h2]
+      )
+    %% _/Snip1
+    | ([Γ ⊢ D], [Γ, x : lhypS _ ⊢ lsnip1S E1 e (\h. E2)]) ⇒
+      let [Γ ⊢ F1] = cut-admis _ _ [Γ ⊢ D] [Γ, x : lhypS _  ⊢ E1] in
+      let [Γ, x : lhypS _ ⊢ F2] =
+        cut-admis _ _ [Γ, y:lhypS _ ⊢ D[..]] [Γ, x : lhypS _, y : lhypS _ ⊢ E2[..,x]] in
+      cut-admis _ _ [Γ ⊢ F1] [Γ, y : lhypS _ ⊢ F2]
+    %% _/Snip2
+    | ([Γ ⊢ D], [Γ, x : lhypS _ ⊢ lsnip2S E1 (\h. E2) e]) ⇒
+      let [Γ ⊢ F1] = cut-admis _ _ [Γ ⊢ D] [Γ, x : lhypS _  ⊢ E1] in
+      let [Γ,  x : lhypS _ ⊢ F2] =
+        cut-admis _ _ [Γ, y:lhypS _ ⊢ D[..]] [Γ, x : lhypS _, y : lhypS _ ⊢ E2[..,x]] in
+      cut-admis _ _ [Γ ⊢ F1] [Γ, y : lhypS _ ⊢ F2]
+    ...
+    ;
+\end{lstlisting}
+
+% `cut-elim` is less interesting, the type signature is enough
+\begin{lstlisting}
+  rec cut-elim : {Γ : lctxS} [Γ ⊢ lconcS-cut A[]] → [Γ ⊢ lconcS A[]] = ...
+\end{lstlisting}
+
 
 \subsection{Subformula Property}
