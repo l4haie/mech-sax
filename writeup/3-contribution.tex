@@ -34,6 +34,8 @@ no uses of cut, but may contain snips.
 
 \subsection{Encoding SAX in Beluga}
 
+% TODO add relevant code snippets
+
 
 \subsection{Eligibility and Irrelevance}
 
@@ -134,3 +136,58 @@ no uses of cut, but may contain snips.
 
 
 \subsection{Subformula Property}
+
+\begin{lstlisting}
+  inductive subfProp : {Γ : lctxS} {Σ : [⊢ formlist]} {D : [Γ ⊢ lconcS A[]]} ctype =
+    | subfProp/lsnip1 :
+        (D : [Γ ⊢ lconcS A[]])
+        (E: [Γ, x : lhypS A[] ⊢ lconcS B[]])
+        {e : [Γ ⊢ elig_c D]}
+        subfProp [Γ] [⊢ Σ] [Γ ⊢ D]
+        → [⊢ inSig A Σ]
+        → subfProp [Γ, x : lhypS A[]] [⊢ Σ] [Γ, x : lhypS A[] ⊢ E]
+        → subfProp [Γ] [⊢ Σ] [Γ ⊢ lsnip1S D e (\x. E[.., x])]
+    | subfProp/lsnip2 :
+        {e : [Γ  ⊢ elig_h (\x. E)]}
+        subfProp [Γ] [⊢ Σ] [Γ ⊢ D]
+        → [⊢ inSig A Σ]
+        → subfProp [Γ, x : lhypS A[]] [⊢ Σ] [Γ, x : lhypS A[] ⊢ E]
+        → subfProp [Γ] [⊢ Σ] [Γ ⊢ lsnip2S D (\x. E[.., x]) e]
+    ...
+    ;
+\end{lstlisting}
+
+
+\begin{lstlisting}
+  rec subformula-property : {Γ : lctxS} {D : [Γ ⊢ lconcS A[]]}
+                            → ctxInSig  [Γ] [⊢ Σ]
+                            → [⊢ inSig A Σ]
+                            → subfProp [Γ] [⊢ Σ] [Γ ⊢ D] =
+  / total 1 /
+  mlam Γ D ⇒ fn ci goal ⇒
+  case [Γ ⊢ D] of
+    | [Γ ⊢ lsnip1S D' e (\h. E')] ⇒
+      (case [Γ ⊢ e] of
+        | [Γ ⊢ elig_c/l⊃L0S #h1 #h2] ⇒
+          let ih2    = lookup ci [Γ ⊢ #h2] in
+          let isig_B = subf-inSig [⊢ subf/⊃2 subf/refl] ih2 in
+          let ih1    = lookup ci [Γ ⊢ #h1] in
+          let sp_D   = subfProp/l⊃L0S [Γ ⊢ #h1] [Γ ⊢ #h2] ih1 ih2 in
+          let ci'    = ctxInSig/cons ci isig_B in
+          let sp_E   = subformula-property _ [Γ, h : lhypS _ ⊢ E'] ci' goal in
+          subfProp/lsnip1 _ sp_D isig_B sp_E
+      )
+    | [Γ ⊢ lsnip2S D' (\h. E') e] ⇒
+      (case [Γ ⊢ e] of
+        | [Γ ⊢ elig_h/l⊃L0S #y] ⇒
+          let ih_y   = lookup ci [Γ ⊢ #y] in
+          let isig_A = subf-inSig [⊢ subf/⊃1 subf/refl] ih_y in
+          let ci'    = ctxInSig/cons ci isig_A in
+          let sp_D   = subformula-property _ [Γ ⊢ D'] ci isig_A in
+          let sp_E   = subformula-property _ [Γ, h : lhypS _ ⊢ E'] ci' goal in
+          subfProp/lsnip2 _ sp_D isig_A sp_E
+      )
+    ...      
+    ;
+
+\end{lstlisting}
