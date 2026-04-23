@@ -59,12 +59,22 @@ no uses of cut, but may contain snips.
 
 \subsection{Translation Between G3 and SAX}
 
+Theorem~1 states that $G_3$ and SAX derive the same sequents. We mechanize both
+directions as recursive functions over derivations that translate hypotheses
+between the two systems using a relation pairing up the two contexts hypothesis
+by hypothesis. Because SAX inherits the invertible rules from $G_3$, they are
+translated in both directions by directly applying the corresponding rule. The
+interesting cases are the noninvertible rules, which correspond to axioms in
+SAX.
+
+The direction from $G_3$ to SAX, showing that $G_3$ derives no more than SAX,
+proceeds by showing that each noninvertible $G_3$ rules can be derived using
+cuts and axioms. For instance, ${\supset}L$ which has no direct counterpart in
+SAX, can be simulated using two nested cuts against the axiom ${\supset}L^0$:
 \begin{lstlisting}
   rec seq2sax : (A : [⊢ o]) rel-ctx-S [Γ] [Γ'] → [Γ ⊢ conc A[]] → [Γ' ⊢ concS A[]] =
   / total 2 /
-  fn R D ⇒
-  case D of
-    ...
+  fn R D ⇒ case D of
     | [Γ ⊢ ⊃L c1 (\h. c2) H] ⇒
       let [Γ' ⊢ HS] = hyp2hypS R [Γ ⊢ H] in
       let [Γ' ⊢ c1S] = seq2sax R [Γ ⊢ c1] in
@@ -74,12 +84,14 @@ no uses of cut, but may contain snips.
   ;
 \end{lstlisting}
 
+The other direction, from SAX to $G_3$, shows that each SAX axiom can be derived
+in $G_3$ using the corresponding rule and identity. For instance, $\supset L^0$
+is translated as an application of $\supset L$ in $G_3$ with identity proofs for
+both premises:
 \begin{lstlisting}
   rec sax2seq : (A : [⊢ o]) rel-S-ctx [Γ'] [Γ] → [Γ' ⊢ concS A[]] → [Γ ⊢ conc A[]] =
   / total 2 /
-  fn R D ⇒
-  case D of
-    ...
+  fn R D ⇒ case D of
     | [Γ' ⊢ ⊃L0S HS1 HS2] ⇒
       let [Γ ⊢ H1] = hypS2hyp R [Γ' ⊢ HS1] in
       let [Γ ⊢ H2] = hypS2hyp R [Γ' ⊢ HS2] in
