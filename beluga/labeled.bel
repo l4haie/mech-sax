@@ -6,27 +6,39 @@ LF lconcS : o → type =
   | linitialS : {h : lhypS A} lconcS A
 
   | l⊃RS : (lhypS A → lconcS B)
-           → lconcS (A ⊃ B)
-                
+	   → lconcS (A ⊃ B)
+
   | l⊃L0S : lhypS A → lhypS (A ⊃ B) → lconcS B
-                                         
+
   | lsnip1S : {D : lconcS A} elig_c D → (lhypS A → lconcS B)
-              → lconcS B
+	      → lconcS B
 
   | lsnip2S : lconcS A → {E : lhypS A → lconcS B} elig_h E
-              → lconcS B
-                       
+	      → lconcS B
+
+  | l⊗R0S  : lhypS A → lhypS B →
+	     lconcS (A ⊗ B)
+
+  | l⊗LS : (lhypS A → lhypS B → lconcS C)
+	   → lhypS (A ⊗ B) → lconcS C
+
 and
 
 LF elig_c : lconcS A → type =
-  | elig_c/l⊃L0S : {x : lhypS A} {y : lhypS (A ⊃ B)}
-                   elig_c (l⊃L0S x y)
-
+ | elig_c/l⊃L0S : {x : lhypS A} {y : lhypS (A ⊃ B)}
+		  elig_c (l⊃L0S x y)
 and
 
 LF elig_h : (lhypS A → lconcS B) → type =
   | elig_h/l⊃L0S : {y : lhypS (A ⊃ B)}
-                   elig_h (\x. l⊃L0S x y)
+		   elig_h (\x. l⊃L0S x y)
+  | elig_h/l⊗R0S/1 :   {z : lhypS B}
+		       elig_h (\y. l⊗R0S (y : lhypS A) z)
+   | elig_h/l⊗R0S/2 :  {y : lhypS A}
+		       elig_h (\z. l⊗R0S y (z : lhypS B))
+   | elig_h/l⊗R0S/3 :
+       elig_h (\y. l⊗R0S  y y)
+
 ;
 
 
@@ -34,31 +46,45 @@ LF elig_h : (lhypS A → lconcS B) → type =
 
 LF lconcS-cut : o → type =
   | linitialS-cut : {h : lhypS A} lconcS-cut A
-                    
+
   | l⊃RS-cut : (lhypS A → lconcS-cut B)
-               → lconcS-cut (A ⊃ B)
-                     
+	       → lconcS-cut (A ⊃ B)
+
   | l⊃L0S-cut : lhypS A → lhypS (A ⊃ B)
-                → lconcS-cut B
-                        
+		→ lconcS-cut B
+
   | lcutS-cut : lconcS-cut A → (lhypS A → lconcS-cut B)
-                → lconcS-cut B
-                        
+		→ lconcS-cut B
+
   | lsnip1S-cut : {D : lconcS-cut A} elig_c-cut D → (lhypS A → lconcS-cut B)
-                  → lconcS-cut B
-                  
+		  → lconcS-cut B
+
   | lsnip2S-cut : lconcS-cut A → {E : lhypS A → lconcS-cut B} elig_h-cut E
-                  → lconcS-cut B
-                  
+		  → lconcS-cut B
+
+  | l⊗R0S-cut  : lhypS A → lhypS B →
+		 lconcS-cut (A ⊗ B)
+
+  | l⊗LS-cut : (lhypS A → lhypS B → lconcS-cut C)
+	       → lhypS (A ⊗ B) → lconcS-cut C
+
+
 and
 
 LF elig_c-cut : lconcS-cut A → type =
   | elig_c/l⊃L0S-cut : {x : lhypS A} {y : lhypS (A ⊃ B)}
-                       elig_c-cut (l⊃L0S-cut x y)
-                       
+		       elig_c-cut (l⊃L0S-cut x y)
+
 and
 
 LF elig_h-cut : (lhypS A → lconcS-cut B) → type =
   | elig_h/l⊃L0S-cut : {y : lhypS (A ⊃ B)}
-                       elig_h-cut (\x. l⊃L0S-cut x y)
+		       elig_h-cut (\x. l⊃L0S-cut x y)
+  | elig_h/l⊗R0S/1-cut :   {z : lhypS B}
+			   elig_h-cut (\y. l⊗R0S-cut (y : lhypS A) z)
+  | elig_h/l⊗R0S/2-cut :  {y : lhypS A}
+			  elig_h-cut (\z. l⊗R0S-cut y (z : lhypS B))
+  | elig_h/l⊗R0S/3-cut :
+      elig_h-cut (\y. l⊗R0S-cut  y y)
+
 ;
