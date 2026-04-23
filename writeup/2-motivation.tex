@@ -1,6 +1,123 @@
 \section{Motivation}
 \label{section:motivation}
 
+\subsection{The Semi-Axiomatic Sequent Calculus}
+
+\begin{figure}[ht!]
+\[
+  \infer[\mathsf{Id}_A]{\Gamma, A \vdash A}{}
+  \qquad
+  \infer[\mathsf{Cut}_A]{\Gamma \vdash C}{\Gamma \vdash A & \Gamma, A \vdash C}
+\]
+\[
+  \infer[{\supset}R]{\Gamma \vdash A \supset B}{\Gamma, A \vdash B}
+  \qquad
+  \infer[{\supset}L^0]{\Gamma, A, A \supset B \vdash B}{}
+\]
+\[
+  \infer[{\otimes}R^0]{\Gamma, A, B \vdash A \otimes B}{}
+  \qquad
+  \infer[{\otimes}L]{\Gamma, A \otimes B \vdash C}{\Gamma, A \otimes B, A, B \vdash C}
+\]
+\[
+  \infer[\mathbf{1}R^0]{\Gamma \vdash \mathbf{1}}{}
+  \qquad
+  \infer[\mathbf{1}L]{\Gamma, \mathbf{1} \vdash C}{\Gamma, \mathbf{1} \vdash C}
+\]
+\[
+  \infer[{\with}R]{\Gamma \vdash A \mathbin{\with} B}{\Gamma \vdash A & \Gamma \vdash B}
+  \qquad
+  \infer[{\with}L^0_1]{\Gamma, A \mathbin{\with} B \vdash A}{}
+  \qquad
+  \infer[{\with}L^0_1]{\Gamma, A \mathbin{\with} B \vdash B}{}
+\]
+\[
+  \infer[{\lor}R^0_1]{\Gamma, A \vdash A \lor B}{}
+  \qquad
+  \infer[{\lor}R^0_2]{\Gamma, B \vdash A \lor B}{}
+  \qquad
+  \infer[{\lor}L]{\Gamma, A \lor B \vdash C}{\Gamma, A \lor B, A \vdash C & \Gamma, A \lor B, B \vdash C}
+\]
+\caption{The Semi-Axiomatic Sequent Calculus (\textsc{Sax})~\cite{DeYoung2020}.}
+\label{fig:sax-rules}
+\end{figure}
+
+
+\begin{figure}[ht!]
+\[
+  \infer[\text{Id}_A]{\Gamma^0,\; x : A \vdash y : A}{}
+  \qquad
+  \infer[\text{Cut}_A]{\Gamma \vdash z : C}{
+    \Gamma \vdash x : A &
+    \Gamma,\; x : A \vdash z : C
+  }
+\]
+
+\[
+  \infer[\text{Snip}_A^1]{\Gamma \vdash z : C}{
+    \Gamma \vdash x^\ast : A &
+    \Gamma,\; x : A \vdash z : C
+  }
+  \qquad
+  \infer[\text{Snip}_A^2]{\Gamma \vdash z : C}{
+    \Gamma \vdash x : A &
+    \Gamma,\; x^\ast : A \vdash z : C
+  }
+\]
+\[
+  \infer[{\supset}R]{\Gamma \vdash x : A \supset B}{
+    \Gamma,\; y : A \vdash z : B
+  }
+  \qquad
+  \infer[{\supset}L^0]{\Gamma^0,\; y^\ast : A,\; x : A \supset B \vdash z^\ast : B}{}
+\]
+
+\[
+  \infer[{\otimes}R^0]{\Gamma^0,\; y^\ast : A,\; z^\ast : B \vdash x : A \otimes B}{}
+  \qquad
+  \infer[{\otimes}L]{\Gamma,\; x : A \otimes B \vdash w : C}{
+    \Gamma,\; x : A \otimes B,\; y : A,\; z : B \vdash w : C
+  }
+\]
+
+\[
+  \infer[1R^0]{\Gamma^0 \vdash x : 1}{}
+  \qquad
+  \infer[1L]{\Gamma,\; x : 1 \vdash w : C}{
+    \Gamma,\; x : 1 \vdash w : C
+  }
+\]
+
+\[
+  \infer[{\&}R]{\Gamma \vdash x : A \mathbin{\&} B}{
+    \Gamma \vdash y : A &
+    \Gamma \vdash z : B
+  }
+  \qquad
+  \infer[{\&}L_1^0]{\Gamma^0,\; x : A \mathbin{\&} B \vdash y^\ast : A}{}
+  \qquad
+  \infer[{\&}L_2^0]{\Gamma^0,\; x : A \mathbin{\&} B \vdash z^\ast : B}{}
+\]
+
+\end{figure}
+\begin{figure}[t]
+\[
+  \infer[{\lor}R_1^0]{\Gamma^0,\; x^\ast : A \vdash z : A \vee B}{}
+  \qquad
+  \infer[{\lor}R_2^0]{\Gamma^0,\; y^\ast : B \vdash z : A \vee B}{}
+\]
+
+\[
+  \infer[{\lor}L]{\Gamma,\; z : A \vee B \vdash w : C}{
+    \Gamma,\; z : A \vee B,\; x : A \vdash w : C &
+    \Gamma,\; z : A \vee B,\; y : B \vdash w : C
+  }
+\]
+\caption{Labelled SAX~\cite{DeYoung2020}.}
+\label{fig:sax-labelled}
+\end{figure}
+
+
 \subsection{Computational Interpretation of SAX}
 
 Beyond its proof-theoretic results, SAX admits a natural operational
@@ -25,9 +142,14 @@ rules write to memory while those assigned to left rules read from it.
 This low-level interpretation of SAX further gives rise, in extensions of SAX,
 to type-theoretically justified compiler optimizations such as in-place memory
 reuse \cite{}. Extensions of SAX in adjoint logic have also served as the
-logical foundation for concurrent language implementations \cite{}. A
-mechanization of SAX's proof theory therefore provides higher confidence in the
-theoretical foundations underlying these results.
+logical foundation for concurrent language implementations \cite{}. All of these
+applications ultimately depend on the soundness of SAX's proof theory.
 
 
 \subsection{Mechanization}
+
+This proof theory is, however, not trivial to prove. The original paper
+establishes the key proof-theoretic results, i.e. the admissibility of cut,
+cut-elimination, and the subformula property, but necessarily leaves a
+significant portion of the proofs implicit, due to their complexity. The central
+difficulty, as discussed above is
