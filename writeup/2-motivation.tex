@@ -3,6 +3,14 @@
 
 \subsection{The Semi-Axiomatic Sequent Calculus}
 
+% SAX is introduced in the "motivation section" because where the fuck else are
+% we supposed to describe it? In the introduction? Or in the abtract? Maybe we
+% should leave that for the conclusion eh?
+
+The rules of SAX, where the noninvertible rules have been replaced by axioms and
+the invertible rules are inherited from $G_3$, are given in
+Figure~\ref{fig:sax-rules}.
+
 \begin{figure}[ht!]
 \[
   \infer[\mathsf{Id}_A]{\Gamma, A \vdash A}{}
@@ -29,7 +37,7 @@
   \qquad
   \infer[{\with}L^0_1]{\Gamma, A \mathbin{\with} B \vdash A}{}
   \qquad
-  \infer[{\with}L^0_1]{\Gamma, A \mathbin{\with} B \vdash B}{}
+  \infer[{\with}L^0_2]{\Gamma, A \mathbin{\with} B \vdash B}{}
 \]
 \[
   \infer[{\lor}R^0_1]{\Gamma, A \vdash A \lor B}{}
@@ -42,6 +50,51 @@
 \label{fig:sax-rules}
 \end{figure}
 
+As discussed in the introduction, standard cut elimination fails because the
+axioms introduce formulas that cannot be unpacked. Consider the following proof,
+where the cut on $B$ cannot be eliminated:
+\[
+  \infer[{\supset}R]{A \supset B, B \supset C \vdash A \supset C}{
+    \infer[\text{Cut}_B]{A, A \supset B, B \supset C \vdash C}{
+      \infer[{\supset}L^0]{A, A \supset B \vdash B}{} &
+      \infer[{\supset}L^0]{B, B \supset C \vdash C}{}
+    }
+  }
+\]
+
+However, the cut is analytic: $B$ is a subformula of the conclusion sequent, and
+thus the proof exhibits the subformula property. SAX therefore restricts to such
+analytic cuts, called snips, which require that the cut formula in at least one
+of the premises originates from an axiom as a subformula of its principal
+formula. With their addition, SAX satisfies the subformula
+property~\cite{DeYoung2020}.
+
+In order to track the origins of each formula,~\cite{DeYoung2020} introduces a
+labelling system, marking formulas $y^*: A$ as eligible for a snip. We can then
+propagate this through the proof by marking a variable as eligible in the
+conclusion if it is eligible in at least one of its
+premises~\cite{DeYoung2020}. Since the application of axioms can contain
+antecedents that are irrelevant (antecedents that are not strictly needed for
+the application of said axiom) we must also track these irrelevant formulas by
+marking them $x^0: B$. We mark a variable as irrelevant in the conclusion if it
+is irrelevant in both of its premises~\cite{DeYoung2020}. Note that eligibility
+and irrelevance are properties of formula occurrences in a derivation, not part
+of the syntax of sequents. The corresponding labeled proof from above, where
+$t^*: B$ is eligible because it is a subformula of the principal formula of
+(both) $\supset L^0$ axioms, is given below:
+\[
+\infer[\text{$\supset$R}]{x : A \supset B,\; y : B \supset C \vdash z : A \supset C}{
+  \infer[\text{Snip}_B]{u^* : A,\; x : A \supset B,\; y : B \supset C \vdash w^* : C}{
+    \infer[\supset L^0]{u^* : A,\; x : A \supset B,\; y^0 : B \supset C \vdash t^* : B}{} &
+    \infer[\supset L^0]{u^0 : A,\; x^0 : A \supset B,\; t^* : B,\; y : B \supset C \vdash w^* : C}{}
+  }
+}
+\]
+
+Figure~\ref{fig:sax-labelled} gives the labeled rules for Soprillo, the subset
+of SAX that we mechanize, covering identity ($\texttt{id}$), implication
+(${\supset}R$, ${\supset}L^0$), tensor (${\otimes}R^0$, ${\otimes}L$), and
+snips ($\texttt{snip}^1$, $\texttt{snip}^2$).
 
 \begin{figure}[ht!]
 \[
@@ -80,39 +133,6 @@
   }
 \]
 
-\[
-  \infer[1R^0]{\Gamma^0 \vdash x : 1}{}
-  \qquad
-  \infer[1L]{\Gamma,\; x : 1 \vdash w : C}{
-    \Gamma,\; x : 1 \vdash w : C
-  }
-\]
-
-\[
-  \infer[{\&}R]{\Gamma \vdash x : A \mathbin{\&} B}{
-    \Gamma \vdash y : A &
-    \Gamma \vdash z : B
-  }
-  \qquad
-  \infer[{\&}L_1^0]{\Gamma^0,\; x : A \mathbin{\&} B \vdash y^\ast : A}{}
-  \qquad
-  \infer[{\&}L_2^0]{\Gamma^0,\; x : A \mathbin{\&} B \vdash z^\ast : B}{}
-\]
-
-\end{figure}
-\begin{figure}[t]
-\[
-  \infer[{\lor}R_1^0]{\Gamma^0,\; x^\ast : A \vdash z : A \vee B}{}
-  \qquad
-  \infer[{\lor}R_2^0]{\Gamma^0,\; y^\ast : B \vdash z : A \vee B}{}
-\]
-
-\[
-  \infer[{\lor}L]{\Gamma,\; z : A \vee B \vdash w : C}{
-    \Gamma,\; z : A \vee B,\; x : A \vdash w : C &
-    \Gamma,\; z : A \vee B,\; y : B \vdash w : C
-  }
-\]
 \caption{Labelled SAX~\cite{DeYoung2020}.}
 \label{fig:sax-labelled}
 \end{figure}
