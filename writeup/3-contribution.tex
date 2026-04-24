@@ -46,15 +46,15 @@ correspond one-for-one to the rules of SAX; adequacy holds because
 variables.
 
 \begin{lstlisting}
-LF lhypS : o -> type = ;
-LF lconcS : o -> type =
+LF lhypS : o → type = ;
+LF lconcS : o → type =
   | linitialS : {h : lhypS A} lconcS A
-  | l⊃RS      : (lhypS A -> lconcS B) -> lconcS (A ⊃ B)
-  | l⊃L0S     : lhypS A -> lhypS (A ⊃ B) -> lconcS B
-  | lsnip1S   : {D : lconcS A} elig_c D -> (lhypS A -> lconcS B) -> lconcS B
-  | lsnip2S   : lconcS A -> {E : lhypS A -> lconcS B} elig_h E -> lconcS B
-  | l⊗R0S     : lhypS A -> lhypS B -> lconcS (A ⊗ B)
-  | l⊗LS      : (lhypS A -> lhypS B -> lconcS C) -> lhypS (A ⊗ B) -> lconcS C
+  | l⊃RS      : (lhypS A → lconcS B) → lconcS (A ⊃ B)
+  | l⊃L0S     : lhypS A → lhypS (A ⊃ B) → lconcS B
+  | lsnip1S   : {D : lconcS A} elig_c D → (lhypS A → lconcS B) → lconcS B
+  | lsnip2S   : lconcS A → {E : lhypS A → lconcS B} elig_h E → lconcS B
+  | l⊗R0S     : lhypS A → lhypS B → lconcS (A ⊗ B)
+  | l⊗LS      : (lhypS A → lhypS B → lconcS C) → lhypS (A ⊗ B) → lconcS C
 \end{lstlisting}
 
 One notable feature of the encoding concerns the two variable annotations
@@ -93,14 +93,14 @@ Instead we define eligibility as predicates indexed directly over
 derivation terms:
 
 \begin{lstlisting}
-LF elig_c : lconcS A -> type =
+LF elig_c : lconcS A → type =
   | elig_c/l⊃L0S : {x : lhypS A} {y : lhypS (A ⊃ B)} elig_c (l⊃L0S x y)
 and
-LF elig_h : (lhypS A -> lconcS B) -> type =
+LF elig_h : (lhypS A → lconcS B) → type =
   | elig_h/l⊃L0S   : {y : lhypS (A ⊃ B)} elig_h (\x. l⊃L0S x y)
-  | elig_h/l⊗R0S/1 : {z : lhypS B}        elig_h (\y. l⊗R0S (y : lhypS A) z)
-  | elig_h/l⊗R0S/2 : {y : lhypS A}        elig_h (\z. l⊗R0S y (z : lhypS B))
-  | elig_h/l⊗R0S/3 :                       elig_h (\y. l⊗R0S y y)
+  | elig_h/l⊗R0S/1 : {z : lhypS B}       elig_h (\y. l⊗R0S (y : lhypS A) z)
+  | elig_h/l⊗R0S/2 : {y : lhypS A}       elig_h (\z. l⊗R0S y (z : lhypS B))
+  | elig_h/l⊗R0S/3 :                     elig_h (\y. l⊗R0S y y)
 \end{lstlisting}
 
 \texttt{elig\_c~D} holds when the closed derivation \texttt{D} ends in
@@ -148,15 +148,15 @@ cuts and axioms. For instance, ${\supset}L$ is simulated by two nested
 cuts against ${\supset}L^0$:
 
 \begin{lstlisting}
-rec seq2sax : (A : [|- o]) rel-ctx-S [Γ] [Γ'] -> [Γ |- conc A[]]
-              -> [Γ' |- concS A[]] =
+rec seq2sax : (A : [⊢ o]) rel-ctx-S [Γ] [Γ'] → [Γ ⊢ conc A[]]
+              → [Γ' ⊢ concS A[]] =
 / total 2 /
-fn R D => case D of
-  | [Γ |- ⊃L c1 (\h. c2) H] =>
-    let [Γ' |- HS]                = hyp2hypS R [Γ |- H] in
-    let [Γ' |- c1S]               = seq2sax R [Γ |- c1] in
-    let [Γ', x : hypS B[] |- c2S] = seq2sax (cons-S R) [Γ, x : hyp _ |- c2] in
-    [Γ' |- cutS (cutS c1S (\h. ⊃L0S h HS[..])) (\h. c2S)]  ...
+fn R D ⇒ case D of
+  | [Γ ⊢ ⊃L c1 (\h. c2) H] ⇒
+    let [Γ' ⊢ HS]                = hyp2hypS R [Γ ⊢ H] in
+    let [Γ' ⊢ c1S]               = seq2sax R [Γ ⊢ c1] in
+    let [Γ', x : hypS B[] ⊢ c2S] = seq2sax (cons-S R) [Γ, x : hyp _ ⊢ c2] in
+    [Γ' ⊢ cutS (cutS c1S (\h. ⊃L0S h HS[..])) (\h. c2S)]  ...
 \end{lstlisting}
 
 The reverse direction derives each SAX axiom in $G_3$ using the
@@ -165,14 +165,14 @@ ${\supset}L^0$ this is one application of ${\supset}L$ with two identity
 sub-derivations:
 
 \begin{lstlisting}
-rec sax2seq : (A : [|- o]) rel-S-ctx [Γ'] [Γ] -> [Γ' |- concS A[]]
-              -> [Γ |- conc A[]] =
+rec sax2seq : (A : [⊢ o]) rel-S-ctx [Γ'] [Γ] → [Γ' ⊢ concS A[]]
+              → [Γ ⊢ conc A[]] =
 / total 2 /
-fn R D => case D of
-  | [Γ' |- ⊃L0S HS1 HS2] =>
-    let [Γ |- H1] = hypS2hyp R [Γ' |- HS1] in
-    let [Γ |- H2] = hypS2hyp R [Γ' |- HS2] in
-    [Γ |- ⊃L (initial H1) (\h. initial h) H2]  ...
+fn R D ⇒ case D of
+  | [Γ' ⊢ ⊃L0S HS1 HS2] ⇒
+    let [Γ ⊢ H1] = hypS2hyp R [Γ' ⊢ HS1] in
+    let [Γ ⊢ H2] = hypS2hyp R [Γ' ⊢ HS2] in
+    [Γ ⊢ ⊃L (initial H1) (\h. initial h) H2]  ...
 \end{lstlisting}
 
 \subsection{Admissibility of Cut and Cut Elimination}
@@ -183,13 +183,12 @@ groups.
 
 First, when the cut variable is in an eligible position in either
 premise, the result is immediately a snip with no recursive call. For
-example, when \begin{lstlisting}$D = \texttt{l⊃L0S~h1~h2}$ \end{lstlisting} the succedent is directly
-eligible:
+example, when $D = {\supset}L^0$ the succedent is directly eligible:
 
 \begin{lstlisting}
   %% */_
-  | ([Γ |- l⊃L0S h1 h2], [Γ, x : lhypS _ |- E]) =>
-    [Γ |- lsnip1S (l⊃L0S h1 h2) (elig_c/l⊃L0S h1 h2) (\h. E[..,h])]
+  | ([Γ ⊢ l⊃L0S h1 h2], [Γ, x : lhypS _ |- E]) ⇒
+    [Γ ⊢ lsnip1S (l⊃L0S h1 h2) (elig_c/l⊃L0S h1 h2) (\h. E[..,h])]
 \end{lstlisting}
 
 Second, when the cut formula is principal in both premises, the cut is
@@ -201,13 +200,13 @@ ${\supset}R$:
 
 \begin{lstlisting}
   %% ⊃R/⊃L0
-  | ([Γ |- l⊃RS (\h. D1)], [Γ, x : lhypS _ |- l⊃L0S h1 h2]) =>
-    (case ([Γ, x : lhypS _ |- h2], [Γ, x : lhypS _ |- h1]) of
-      | ([Γ, x:_ |- x],       [Γ, x:_ |- #h1[..]]) => [Γ |- D1[..,#h1]]
-      | ([Γ, x:_ |- #h2[..]], [Γ, x:_ |- x])       =>
-          [Γ |- lsnip2S (l⊃RS (\h. D1)) (\h. l⊃L0S h #h2[..])
+  | ([Γ ⊢ l⊃RS (\h. D1)], [Γ, x : lhypS _ ⊢ l⊃L0S h1 h2]) ⇒
+    (case ([Γ, x : lhypS _ ⊢ h2], [Γ, x : lhypS _ ⊢ h1]) of
+      | ([Γ, x:_ ⊢ x],       [Γ, x:_ ⊢ #h1[..]]) ⇒ [Γ ⊢ D1[..,#h1]]
+      | ([Γ, x:_ ⊢ #h2[..]], [Γ, x:_ ⊢ x]) ⇒
+          [Γ ⊢ lsnip2S (l⊃RS (\h. D1)) (\h. l⊃L0S h #h2[..])
                         (elig_h/l⊃L0S #h2[..])]
-      | ([Γ, x:_ |- #h2[..]], [Γ, x:_ |- #h1[..]]) => [Γ |- l⊃L0S #h1 #h2]
+      | ([Γ, x:_ ⊢ #h2[..]], [Γ, x:_ ⊢ #h1[..]]) ⇒ [Γ ⊢ l⊃L0S #h1 #h2]
     )
 \end{lstlisting}
 
@@ -222,15 +221,15 @@ axiom, including the degenerate case where both positions are the same
 variable:
 
 \begin{lstlisting}
-  | ([Γ |- D'], [Γ, x : lhypS _ |- l⊗R0S h1 h2]) =>
-    (case ([Γ, x : lhypS _ |- h1], [Γ, x : lhypS _ |- h2]) of
-      | ([Γ, x:_ |- #h1[..]], [Γ, x:_ |- #h2[..]]) => [Γ |- l⊗R0S #h1 #h2]
-      | ([Γ, x:_ |- x],       [Γ, x:_ |- #h2[..]]) =>
-          [Γ |- lsnip2S D' (\h. l⊗R0S h #h2[..])   (elig_h/l⊗R0S/1 #h2)]
-      | ([Γ, x:_ |- #h1[..]], [Γ, x:_ |- x])        =>
-          [Γ |- lsnip2S D' (\h. l⊗R0S #h1[..] h)   (elig_h/l⊗R0S/2 #h1)]
-      | ([Γ, x : lhypS A[] |- x], [Γ, x : lhypS A[] |- x]) =>
-          [Γ |- lsnip2S D' (\h. l⊗R0S h h) elig_h/l⊗R0S/3]
+  | ([Γ ⊢ D'], [Γ, x : lhypS _ ⊢ l⊗R0S h1 h2]) ⇒
+    (case ([Γ, x : lhypS _ ⊢ h1], [Γ, x : lhypS _ ⊢ h2]) of
+      | ([Γ, x:_ ⊢ #h1[..]], [Γ, x:_ ⊢ #h2[..]]) ⇒ [Γ ⊢ l⊗R0S #h1 #h2]
+      | ([Γ, x:_ ⊢ x],       [Γ, x:_ ⊢ #h2[..]]) ⇒
+          [Γ ⊢ lsnip2S D' (\h. l⊗R0S h #h2[..])   (elig_h/l⊗R0S/1 #h2)]
+      | ([Γ, x:_ ⊢ #h1[..]], [Γ, x:_ ⊢ x]) ⇒
+          [Γ ⊢ lsnip2S D' (\h. l⊗R0S #h1[..] h)   (elig_h/l⊗R0S/2 #h1)]
+      | ([Γ, x : lhypS A[] ⊢ x], [Γ, x : lhypS A[] ⊢ x]) ⇒
+          [Γ ⊢ lsnip2S D' (\h. l⊗R0S h h) elig_h/l⊗R0S/3]
     )
 \end{lstlisting}
 
@@ -239,17 +238,17 @@ Cut elimination over a separate \texttt{lconcS-cut} type then applies
 sub-derivations:
 
 \begin{lstlisting}
-rec cut-elim : {Γ : lctxS} [Γ |- lconcS-cut A[]] -> [Γ |- lconcS A[]] =
+rec cut-elim : {Γ : lctxS} [Γ ⊢ lconcS-cut A[]] → [Γ ⊢ lconcS A[]] =
 / total 1 /
-mlam Γ => fn D => case D of
-  | [Γ |- lcutS-cut D1 (\h. D2)] =>
-    cut-admis _ _ (cut-elim _ [Γ |- D1]) (cut-elim _ [Γ, x : lhypS _ |- D2])
-  | [Γ |- l⊃L0S-cut h1 h2]            => [Γ |- l⊃L0S h1 h2]
-  | [Γ |- l⊗R0S-cut h1 h2]            => [Γ |- l⊗R0S h1 h2]
-  | [Γ |- l⊗LS-cut (\h1. \h2. D1) h3] =>
-    let [Γ, h1 : lhypS _, h2 : lhypS _ |- D1'] =
-      cut-elim _ [Γ, h1 : lhypS _, h2 : lhypS _ |- D1] in
-    [Γ |- l⊗LS (\h1. \h2. D1') h3]   ...
+mlam Γ ⇒ fn D => case D of
+  | [Γ ⊢ lcutS-cut D1 (\h. D2)] ⇒
+    cut-admis _ _ (cut-elim _ [Γ ⊢ D1]) (cut-elim _ [Γ, x : lhypS _ ⊢ D2])
+  | [Γ ⊢ l⊃L0S-cut h1 h2]            => [Γ ⊢ l⊃L0S h1 h2]
+  | [Γ ⊢ l⊗R0S-cut h1 h2]            => [Γ ⊢ l⊗R0S h1 h2]
+  | [Γ ⊢ l⊗LS-cut (\h1. \h2. D1) h3] =>
+    let [Γ, h1 : lhypS _, h2 : lhypS _ ⊢ D1'] =
+      cut-elim _ [Γ, h1 : lhypS _, h2 : lhypS _ ⊢ D1] in
+    [Γ ⊢ l⊗LS (\h1. \h2. D1') h3]   ...
 \end{lstlisting}
 
 \subsection{Subformula Property}
@@ -264,30 +263,30 @@ require reconstructing the list at each step. The original statement is
 recovered by instantiating $\Sigma = \Gamma \cup \{A\}$ at the root.
 
 \begin{lstlisting}
-inductive subfProp : {Γ : lctxS} {Σ : [|- formlist]}
-                     {D : [Γ |- lconcS A[]]} ctype =
+inductive subfProp : {Γ : lctxS} {Σ : [⊢ formlist]}
+                     {D : [Γ ⊢ lconcS A[]]} ctype =
   | subfProp/initial :
-      {#h : #[Γ |- lhypS A[]]} [|- inSig A Σ]
-      -> subfProp [Γ] [|- Σ] [Γ |- linitialS #h]
+      {#h : #[Γ ⊢ lhypS A[]]} [⊢ inSig A Σ]
+      → subfProp [Γ] [⊢ Σ] [Γ ⊢ linitialS #h]
   | subfProp/l⊃L0S :
-      {#h1 : #[Γ |- lhypS A[]]} {#h2 : #[Γ |- lhypS (A[] ⊃ B[])]}
-      [|- inSig A Σ] -> [|- inSig (A ⊃ B) Σ]
-      -> subfProp [Γ] [|- Σ] [Γ |- l⊃L0S #h1 #h2]
+      {#h1 : #[Γ ⊢ lhypS A[]]} {#h2 : #[Γ ⊢ lhypS (A[] ⊃ B[])]}
+      [⊢ inSig A Σ] → [⊢ inSig (A ⊃ B) Σ]
+      → subfProp [Γ] [⊢ Σ] [Γ ⊢ l⊃L0S #h1 #h2]
   | subfProp/l⊗R0S :
-      {#h1 : #[Γ |- lhypS A[]]} {#h2 : #[Γ |- lhypS B[]]}
-      [|- inSig A Σ] -> [|- inSig B Σ]
-      -> subfProp [Γ] [|- Σ] [Γ |- l⊗R0S #h1 #h2]
+      {#h1 : #[Γ ⊢ lhypS A[]]} {#h2 : #[Γ ⊢ lhypS B[]]}
+      [⊢ inSig A Σ] → [⊢ inSig B Σ]
+      → subfProp [Γ] [⊢ Σ] [Γ ⊢ l⊗R0S #h1 #h2]
   | subfProp/lsnip1 :
-      (D : [Γ |- lconcS A[]]) (E : [Γ, x : lhypS A[] |- lconcS B[]])
-      {e : [Γ |- elig_c D]}
-      subfProp [Γ] [|- Σ] [Γ |- D] -> [|- inSig A Σ]
-      -> subfProp [Γ, x : lhypS A[]] [|- Σ] [Γ, x : lhypS A[] |- E]
-      -> subfProp [Γ] [|- Σ] [Γ |- lsnip1S D e (\x. E[..,x])]
+      (D : [Γ ⊢ lconcS A[]]) (E : [Γ, x : lhypS A[] ⊢ lconcS B[]])
+      {e : [Γ ⊢ elig_c D]}
+      subfProp [Γ] [⊢ Σ] [Γ ⊢ D] → [⊢ inSig A Σ]
+      → subfProp [Γ, x : lhypS A[]] [⊢ Σ] [Γ, x : lhypS A[] ⊢ E]
+      → subfProp [Γ] [⊢ Σ] [Γ ⊢ lsnip1S D e (\x. E[..,x])]
   | subfProp/lsnip2 :
-      {e : [Γ |- elig_h (\x. E)]}
-      subfProp [Γ] [|- Σ] [Γ |- D] -> [|- inSig A Σ]
-      -> subfProp [Γ, x : lhypS A[]] [|- Σ] [Γ, x : lhypS A[] |- E]
-      -> subfProp [Γ] [|- Σ] [Γ |- lsnip2S D (\x. E[..,x]) e]
+      {e : [Γ ⊢ elig_h (\x. E)]}
+      subfProp [Γ] [⊢ Σ] [Γ ⊢ D] → [⊢ inSig A Σ]
+      → subfProp [Γ, x : lhypS A[]] [⊢ Σ] [Γ, x : lhypS A[] ⊢ E]
+      → subfProp [Γ] [⊢ Σ] [Γ ⊢ lsnip2S D (\x. E[..,x]) e]
   ...
 \end{lstlisting}
 
@@ -313,15 +312,15 @@ extracts from the \texttt{inSig} proof for $A \otimes B$ a membership
 proof for $A$:
 
 \begin{lstlisting}
-  | [Γ |- lsnip2S D' (\h. E') e] =>
-    (case [Γ |- e] of
+  | [Γ ⊢ lsnip2S D' (\h. E') e] ⇒
+    (case [Γ ⊢ e] of
       ...
-      | [Γ |- elig_h/l⊗R0S/1 #z] =>
-        let ih_z   = lookup ci [Γ |- #z] in
-        let isig_A = subf-inSig [|- subf/⊗1 subf/refl] goal in
+      | [Γ ⊢ elig_h/l⊗R0S/1 #z] ⇒
+        let ih_z   = lookup ci [Γ ⊢ #z] in
+        let isig_A = subf-inSig [⊢ subf/⊗1 subf/refl] goal in
         let ci'    = ctxInSig/cons ci isig_A in
-        let sp_D   = subformula-property _ [Γ |- D'] ci isig_A in
-        let sp_E   = subformula-property _ [Γ, h : lhypS _ |- E'] ci' goal in
+        let sp_D   = subformula-property _ [Γ ⊢ D'] ci isig_A in
+        let sp_E   = subformula-property _ [Γ, h : lhypS _ ⊢ E'] ci' goal in
         subfProp/lsnip2 _ sp_D isig_A sp_E
       ...
     )
