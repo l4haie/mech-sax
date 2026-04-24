@@ -1,43 +1,44 @@
 % Subformula property
 
 LF subf : o → o → type =
-  | subf/refl : subf A A
-  | subf/⊃1 : subf C A → subf C (A ⊃ B)
-  | subf/⊃2 : subf C B → subf C (A ⊃ B)
-  | subf/⊗1 : subf C A → subf C (A ⊗ B)
-  | subf/⊗2 : subf C B → subf C (A ⊗ B)
-
+  | subf/refl : subf A A                        % reflexivity
+  | subf/⊃1   : subf C A → subf C (A ⊃ B)       % left subformula of ⊃
+  | subf/⊃2   : subf C B → subf C (A ⊃ B)       % right subformula of ⊃
+  | subf/⊗1   : subf C A → subf C (A ⊗ B)       % left subformula of ⊗
+  | subf/⊗2   : subf C B → subf C (A ⊗ B)
 ;
 
 LF formlist : type =
-  | fnil : formlist
-  | fcons : o → formlist → formlist
+  | fnil  : formlist
+  | fcons : o → formlist → formlist             % signature as list of formulas
 ;
 
-
 LF inSig : o → formlist → type =
-  | inSig/here : subf B A → inSig B (fcons A Σ)
-  | inSig/there : inSig B Σ → inSig B (fcons A Σ)
+  | inSig/here  : subf B A → inSig B (fcons A Σ) % B is subformula of head
+  | inSig/there : inSig B Σ → inSig B (fcons A Σ) % recurse
 ;
 
 inductive ctxInSig : {Γ : lctxS} {Σ : [⊢ formlist]} ctype =
   | ctxInSig/nil  : ctxInSig [] [⊢ Σ]
-  | ctxInSig/cons : ctxInSig [Γ] [⊢ Σ]
-		    → [⊢ inSig A Σ]
-		    → ctxInSig [Γ, x : lhypS A[]] [⊢ Σ]
+  | ctxInSig/cons :
+      ctxInSig [Γ] [⊢ Σ]
+      → [⊢ inSig A Σ]                           % every hyp is in Σ
+      → ctxInSig [Γ, x : lhypS A[]] [⊢ Σ]
 ;
 
+% Lookup: recover that a hypothesis formula is in Σ
 rec lookup : ctxInSig [Γ] [⊢ Σ] → [Γ ⊢ lhypS A[]] → [⊢ inSig A Σ] =
 / total 1 /
 fn ci ⇒ fn h ⇒
 case ci of
-  | ctxInSig/nil           ⇒ impossible h
+  | ctxInSig/nil ⇒ impossible h
   | ctxInSig/cons ci' isig ⇒
   case h of
     | [Γ, x : lhypS _ ⊢ x]      ⇒ isig
     | [Γ, x : lhypS _ ⊢ #q[..]] ⇒ lookup ci' [Γ ⊢ #q]
 ;
 
+% Transitivity of subformula
 rec subf-trans : [⊢ subf C B] → [⊢ subf B A] → [⊢ subf C A] =
 / total 2 /
 fn s1 ⇒ fn s2 ⇒
@@ -49,6 +50,7 @@ case s2 of
   | [⊢ subf/⊗2 S] ⇒ let [⊢ R] = subf-trans s1 [⊢ S] in [⊢ subf/⊗2 R]
 ;
 
+% Push subformula relation through signature membership
 rec subf-inSig : [⊢ subf B A] → [⊢ inSig A Σ] → [⊢ inSig B Σ] =
 / total 2 /
 fn sf ⇒ fn isig ⇒
@@ -59,77 +61,98 @@ case isig of
 	let [⊢ R] = subf-inSig sf [⊢ rest] in [⊢ inSig/there R]
 ;
 
-
+% Subformula property judgment
 inductive subfProp : {Γ : lctxS} {Σ : [⊢ formlist]}
 		     {D : [Γ ⊢ lconcS A[]]} ctype =
+
   | subfProp/initial :
       {#h : #[Γ ⊢ lhypS A[]]}
       [⊢ inSig A Σ]
       → subfProp [Γ] [⊢ Σ] [Γ ⊢ linitialS #h]
+
   | subfProp/l⊃L0S :
       {#h1 : #[Γ ⊢ lhypS A[]]}
       {#h2 : #[Γ ⊢ lhypS (A[] ⊃ B[])]}
       [⊢ inSig A Σ]
       → [⊢ inSig (A ⊃ B) Σ]
       → subfProp [Γ] [⊢ Σ] [Γ ⊢ l⊃L0S #h1 #h2]
+
   | subfProp/l⊃R :
       {D : [Γ, x : lhypS A[] ⊢ lconcS B[]]}
       [⊢ inSig A Σ]
-      →  [⊢ inSig B Σ]
-      → subfProp [Γ, x : lhypS A[]] [⊢ Σ] [Γ, x : lhypS A[] ⊢ D]
+      → [⊢ inSig B Σ]
+      → subfProp [Γ, x : lhypS A[]] [⊢ Σ]
+		 [Γ, x : lhypS A[] ⊢ D]
       → subfProp [Γ] [⊢ Σ] [Γ ⊢ l⊃RS (\x. D[.., x])]
+
   | subfProp/lsnip1 :
       (D : [Γ ⊢ lconcS A[]])
-      (E: [Γ, x : lhypS A[] ⊢ lconcS B[]])
+      (E : [Γ, x : lhypS A[] ⊢ lconcS B[]])
       {e : [Γ ⊢ elig_c D]}
       subfProp [Γ] [⊢ Σ] [Γ ⊢ D]
       → [⊢ inSig A Σ]
-      → subfProp [Γ, x : lhypS A[]] [⊢ Σ] [Γ, x : lhypS A[] ⊢ E]
-      → subfProp [Γ] [⊢ Σ] [Γ ⊢ lsnip1S D e (\x. E[.., x])]
+      → subfProp [Γ, x : lhypS A[]] [⊢ Σ]
+		 [Γ, x : lhypS A[] ⊢ E]
+      → subfProp [Γ] [⊢ Σ]
+		 [Γ ⊢ lsnip1S D e (\x. E[.., x])]
+
   | subfProp/lsnip2 :
-      {e : [Γ  ⊢ elig_h (\x. E)]}
+      {e : [Γ ⊢ elig_h (\x. E)]}
       subfProp [Γ] [⊢ Σ] [Γ ⊢ D]
       → [⊢ inSig A Σ]
-      → subfProp [Γ, x : lhypS A[]] [⊢ Σ] [Γ, x : lhypS A[] ⊢ E]
-      → subfProp [Γ] [⊢ Σ] [Γ ⊢ lsnip2S D (\x. E[.., x]) e]
+      → subfProp [Γ, x : lhypS A[]] [⊢ Σ]
+		 [Γ, x : lhypS A[] ⊢ E]
+      → subfProp [Γ] [⊢ Σ]
+		 [Γ ⊢ lsnip2S D (\x. E[.., x]) e]
 
   | subfProp/l⊗R0S :
       {#h1 : #[Γ ⊢ lhypS A[]]}
       {#h2 : #[Γ ⊢ lhypS B[]]}
       [⊢ inSig A Σ]
       → [⊢ inSig B Σ]
-      → subfProp [Γ] [⊢ Σ] [Γ ⊢ l⊗R0S #h1 #h2]
+      → subfProp [Γ] [⊢ Σ]
+		 [Γ ⊢ l⊗R0S #h1 #h2]
 
   | subfProp/l⊗LS :
       {D : [Γ, x : lhypS A[], y : lhypS B[] ⊢ lconcS C[]]}
       [⊢ inSig A Σ]
       → [⊢ inSig B Σ]
       → [⊢ inSig C Σ]
-      → subfProp [Γ, x : lhypS A[], y : lhypS B[]] [⊢ Σ] [Γ, x : lhypS A[], y : lhypS B[] ⊢ D]
-      → subfProp [Γ] [⊢ Σ] [Γ ⊢ l⊗LS (\x. \y. D) h]
+      → subfProp [Γ, x : lhypS A[], y : lhypS B[]] [⊢ Σ]
+		 [Γ, x : lhypS A[], y : lhypS B[] ⊢ D]
+      → subfProp [Γ] [⊢ Σ]
+		 [Γ ⊢ l⊗LS (\x. \y. D) h]
 ;
 
-
+% Proof by induction on derivation
 rec subformula-property : {Γ : lctxS} {D : [Γ ⊢ lconcS A[]]}
-			  → ctxInSig  [Γ] [⊢ Σ]
+			  → ctxInSig [Γ] [⊢ Σ]
 			  → [⊢ inSig A Σ]
 			  → subfProp [Γ] [⊢ Σ] [Γ ⊢ D] =
 / total 1 /
 mlam Γ D ⇒ fn ci goal ⇒
 case [Γ ⊢ D] of
+
+  % Initial
   | [Γ ⊢ linitialS #h] ⇒
 	let isig = lookup ci [Γ ⊢ #h] in
 	subfProp/initial [Γ ⊢ #h] isig
+
+  % ⊃R
   | [Γ ⊢ l⊃RS (\h. D')] ⇒
 	let [⊢ IA] = subf-inSig [⊢ subf/⊃1 subf/refl] goal in
 	let [⊢ IB] = subf-inSig [⊢ subf/⊃2 subf/refl] goal in
 	let ci'    = ctxInSig/cons ci [⊢ IA] in
 	let sp     = subformula-property _ [Γ, x : lhypS _ ⊢ D'] ci' [⊢ IB] in
 	subfProp/l⊃R _ [⊢ IA] [⊢ IB] sp
+
+  % ⊃L
   | [Γ ⊢ l⊃L0S #h1 #h2] ⇒
 	let ih1 = lookup ci [Γ ⊢ #h1] in
 	let ih2 = lookup ci [Γ ⊢ #h2] in
 	subfProp/l⊃L0S [Γ ⊢ #h1] [Γ ⊢ #h2] ih1 ih2
+
+  % snip1
   | [Γ ⊢ lsnip1S D' e (\h. E')] ⇒
 	(case [Γ ⊢ e] of
 	  | [Γ ⊢ elig_c/l⊃L0S #h1 #h2] ⇒
@@ -141,6 +164,8 @@ case [Γ ⊢ D] of
 		let sp_E   = subformula-property _ [Γ, h : lhypS _ ⊢ E'] ci' goal in
 		subfProp/lsnip1 _ sp_D isig_B sp_E
 	)
+
+  % snip2
   | [Γ ⊢ lsnip2S D' (\h. E') e] ⇒
 	(case [Γ ⊢ e] of
 	  | [Γ ⊢ elig_h/l⊃L0S #y] ⇒
@@ -150,6 +175,7 @@ case [Γ ⊢ D] of
 		let sp_D   = subformula-property _ [Γ ⊢ D'] ci isig_A in
 		let sp_E   = subformula-property _ [Γ, h : lhypS _ ⊢ E'] ci' goal in
 		subfProp/lsnip2 _ sp_D isig_A sp_E
+
 
 	  | [Γ ⊢ elig_h/l⊗R0S/1 #z] ⇒
 		let ih_z   = lookup ci [Γ ⊢ #z] in
@@ -173,13 +199,16 @@ case [Γ ⊢ D] of
 		let sp_D   = subformula-property _ [Γ ⊢ D'] ci isig_A in
 		let sp_E   = subformula-property _ [Γ, h : lhypS _ ⊢ E'] ci' goal in
 		subfProp/lsnip2 _ sp_D isig_A sp_E
-
 	)
+
+
+  % ⊗R
   | [Γ ⊢ l⊗R0S #h1 #h2] ⇒
 	let ih1 = lookup ci [Γ ⊢ #h1] in
 	let ih2 = lookup ci [Γ ⊢ #h2] in
 	subfProp/l⊗R0S [Γ ⊢ #h1] [Γ ⊢ #h2] ih1 ih2
 
+  % ⊗L
   | [Γ ⊢ l⊗LS (\h1. \h2. D1) #h3] ⇒
 	let ih3 = lookup ci [Γ ⊢ #h3] in
 	let isig_A = subf-inSig [⊢ subf/⊗1 subf/refl] ih3 in
@@ -187,5 +216,5 @@ case [Γ ⊢ D] of
 	let ci'    = ctxInSig/cons ci isig_A in
 	let ci''   = ctxInSig/cons ci' isig_B in
 	let sp_D1  = subformula-property _ [Γ, x : lhypS _, y : lhypS _ ⊢ D1] ci'' goal in
-	subfProp/l⊗LS _  isig_A isig_B goal sp_D1
+	subfProp/l⊗LS _ isig_A isig_B goal sp_D1
 ;

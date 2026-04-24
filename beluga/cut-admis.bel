@@ -1,180 +1,182 @@
-%% Cut admissibility and cut elimination
-rec cut-admis : {Γ : lctxS} {A : [⊢ o]} [Γ ⊢ lconcS A[]]
-		→ [Γ, x:lhypS A[] ⊢ lconcS C[]]
+% Cut admissibility and cut elimination
+
+% Prove that cut is admissible in Soprillo (lconcS).
+% Cases follow the standard pattern: reduce on the structure of D and E,
+% pushing cuts inward. Non-principal cuts commute; principal cuts reduce.
+rec cut-admis : {Γ : lctxS} {A : [⊢ o]}
+		[Γ ⊢ lconcS A[]] → [Γ, x : lhypS A[] ⊢ lconcS C[]]
 		→ [Γ ⊢ lconcS C[]] =
 / total 1 /
 mlam Γ A ⇒ fn D E ⇒
 case (D, E) of
-  %% */_
+
+  % */_: D is an eligible atomic rule; snip it into E
   | ([Γ ⊢ l⊃L0S h1 h2], [Γ, x : lhypS _ ⊢ E]) ⇒
 	[Γ ⊢ lsnip1S (l⊃L0S h1 h2) (elig_c/l⊃L0S h1 h2) (\h. E[..,h])]
-  %% _/0
+
+  % _/0: x not free in E
   | ([Γ ⊢ D], [Γ, x : lhypS _ ⊢ E[..]]) ⇒
 	[Γ ⊢ E]
-  %% _/Id
-  | ([Γ ⊢ D], [Γ, x :lhypS _ ⊢ linitialS z]) ⇒
+
+  % _/Id: E is an initial; substitute D for x or keep the ambient variable
+  | ([Γ ⊢ D], [Γ, x : lhypS _ ⊢ linitialS z]) ⇒
 	(case [Γ, x : lhypS _ ⊢ z] of
-	  | [Γ, x : lhypS _ ⊢ x] ⇒ [Γ ⊢ D]
-	  | [Γ, x : lhypS _ ⊢ #z[..]] ⇒ [Γ ⊢ linitialS #z]
+	  | [Γ, x : lhypS _ ⊢ x]       ⇒ [Γ ⊢ D]
+	  | [Γ, x : lhypS _ ⊢ #z[..]]  ⇒ [Γ ⊢ linitialS #z]
 	)
-  %% Id/_
-  | ([Γ ⊢ linitialS h], [Γ, x : lhypS _  ⊢ E]) ⇒
+
+  % Id/_: D is initial; substitute the hypothesis directly into E
+  | ([Γ ⊢ linitialS h], [Γ, x : lhypS _ ⊢ E]) ⇒
 	[Γ ⊢ E[..,h]]
-  %% ⊃R/⊃L0
+
+  % ⊃R/⊃L0: principal cut — beta-reduce ⊃
   | ([Γ ⊢ l⊃RS (\h. D1)], [Γ, x : lhypS _ ⊢ l⊃L0S h1 h2]) ⇒
 	(case ([Γ, x : lhypS _ ⊢ h2], [Γ, x : lhypS _ ⊢ h1]) of
-	  | ([Γ, x : lhypS _ ⊢ x], [Γ, x : lhypS _ ⊢ #h1[..] ]) ⇒
+	  | ([Γ, x : lhypS _ ⊢ x],      [Γ, x : lhypS _ ⊢ #h1[..]]) ⇒
 		[Γ ⊢ D1[..,#h1]]
 	  | ([Γ, x : lhypS _ ⊢ #h2[..]], [Γ, x : lhypS _ ⊢ x]) ⇒
-		[Γ ⊢ lsnip2S  (l⊃RS (\h. D1)) (\h. l⊃L0S h #h2[..])
-			      (elig_h/l⊃L0S #h2[..])]
+		[Γ ⊢ lsnip2S (l⊃RS (\h. D1)) (\h. l⊃L0S h #h2[..]) (elig_h/l⊃L0S #h2[..])]
 	  | ([Γ, x : lhypS _ ⊢ #h2[..]], [Γ, x : lhypS _ ⊢ #h1[..]]) ⇒
 		[Γ ⊢ l⊃L0S #h1 #h2]
 	)
-  %% _/⊃R
+
+  % _/⊃R: commute cut into the body
   | ([Γ ⊢ D], [Γ, x : lhypS _ ⊢ l⊃RS (\h. E')]) ⇒
 	let [Γ, z : lhypS _ ⊢ F] =
 	cut-admis _ _ [Γ, z : lhypS _ ⊢ D[..]]
-	   [Γ, z : lhypS _ , x : lhypS A[] ⊢ E'[..,z]] in
+	   [Γ, z : lhypS _, x : lhypS A[] ⊢ E'[..,z]] in
 	[Γ ⊢ l⊃RS (\h. F[..,h])]
-  %% _/Snip1
+
+  % _/Snip1: commute cut past snip1 — push into both the subject and continuation
   | ([Γ ⊢ D], [Γ, x : lhypS _ ⊢ lsnip1S E1 e (\h. E2)]) ⇒
-	%	let [Γ ⊢ F1] = cut-admis _ _ [Γ ⊢ D] [Γ, x : lhypS _  ⊢ E1] in ?
-
-	let [Γ ⊢ F1] = cut-admis _ _ [Γ ⊢ D] [Γ, x : lhypS _  ⊢ E1] in
+	let [Γ ⊢ F1] = cut-admis _ _ [Γ ⊢ D] [Γ, x : lhypS _ ⊢ E1] in
 	let [Γ, x : lhypS _ ⊢ F2] =
-	cut-admis _ _ [Γ, y:lhypS _ ⊢ D[..]]
+	cut-admis _ _ [Γ, y : lhypS _ ⊢ D[..]]
 	   [Γ, x : lhypS _, y : lhypS _ ⊢ E2[..,x]] in
 	cut-admis _ _ [Γ ⊢ F1] [Γ, y : lhypS _ ⊢ F2]
 
-
-  %% _/Snip2
+  % _/Snip2: commute cut past snip2 — same structure as _/Snip1
   | ([Γ ⊢ D], [Γ, x : lhypS _ ⊢ lsnip2S E1 (\h. E2) e]) ⇒
-	let [Γ ⊢ F1] = cut-admis _ _ [Γ ⊢ D] [Γ, x : lhypS _  ⊢ E1] in
-	let [Γ,  x : lhypS _ ⊢ F2] =
-	cut-admis _ _ [Γ, y:lhypS _ ⊢ D[..]]
+	let [Γ ⊢ F1] = cut-admis _ _ [Γ ⊢ D] [Γ, x : lhypS _ ⊢ E1] in
+	let [Γ, x : lhypS _ ⊢ F2] =
+	cut-admis _ _ [Γ, y : lhypS _ ⊢ D[..]]
 	   [Γ, x : lhypS _, y : lhypS _ ⊢ E2[..,x]] in
 	cut-admis _ _ [Γ ⊢ F1] [Γ, y : lhypS _ ⊢ F2]
 
-  %% Snip1/_
-  | ([Γ ⊢ lsnip1S D1 e (\h. D2)], [Γ, x : lhypS _  ⊢ E]) ⇒
-	let [Γ, y : lhypS _  ⊢ F1] =
-	cut-admis _ _ [Γ, y : lhypS _  ⊢ D2]
-	   [Γ, y : lhypS _, x : lhypS _  ⊢ E[..,x]] in
+  % Snip1/_: commute cut out of snip1 continuation
+  | ([Γ ⊢ lsnip1S D1 e (\h. D2)], [Γ, x : lhypS _ ⊢ E]) ⇒
+	let [Γ, y : lhypS _ ⊢ F1] =
+	cut-admis _ _ [Γ, y : lhypS _ ⊢ D2]
+	   [Γ, y : lhypS _, x : lhypS _ ⊢ E[..,x]] in
 	cut-admis _ _ [Γ ⊢ D1] [Γ, y : lhypS _ ⊢ F1]
-  %% Snip2/_
+
+  % Snip2/_: commute cut out of snip2 continuation
   | ([Γ ⊢ lsnip2S D1 (\h. D2) e], [Γ, x : lhypS _ ⊢ E]) ⇒
-	let [Γ, y : lhypS _  ⊢ F1] =
-	cut-admis _ _ [Γ, y : lhypS _  ⊢ D2]
-	   [Γ, y : lhypS _, x : lhypS _  ⊢ E[..,x]] in
+	let [Γ, y : lhypS _ ⊢ F1] =
+	cut-admis _ _ [Γ, y : lhypS _ ⊢ D2]
+	   [Γ, y : lhypS _, x : lhypS _ ⊢ E[..,x]] in
 	cut-admis _ _ [Γ ⊢ D1] [Γ, y : lhypS _ ⊢ F1]
 
-
-
+  % ⊗R0/⊗L: principal cut — beta-reduce ⊗; split on whether h is x or ambient
   | ([Γ ⊢ l⊗R0S h1 h2], [Γ, x : lhypS _ ⊢ l⊗LS (\ha. \hb. E') h]) ⇒
 	(case [Γ, x : lhypS _ ⊢ h] of
-	  | [Γ, x : lhypS _  ⊢ x] ⇒
+	  | [Γ, x : lhypS _ ⊢ x] ⇒
 		cut-admis _ _ [Γ ⊢ l⊗R0S h1 h2]
 		   [Γ, x : lhypS _ ⊢ E'[..,x,h1[..],h2[..]]]
-	  |  [Γ, x : lhypS _ ⊢ #h[..]] ⇒
-		 let [Γ, ha : lhypS _, hb : lhypS _ ⊢ F] =
-		 cut-admis _ _
-		    [Γ, ha : lhypS _, hb : lhypS _ ⊢ l⊗R0S h1[..] h2[..]]
-		    [Γ, ha : lhypS _, hb : lhypS _, x : lhypS _ ⊢ E'[.., ha, hb]] in
-		 [Γ ⊢ l⊗LS (\ha. \hb. F[.., ha, hb]) #h]
+	  | [Γ, x : lhypS _ ⊢ #h[..]] ⇒
+		let [Γ, ha : lhypS _, hb : lhypS _ ⊢ F] =
+		cut-admis _ _ [Γ, ha : lhypS _, hb : lhypS _ ⊢ l⊗R0S h1[..] h2[..]]
+		   [Γ, ha : lhypS _, hb : lhypS _, x : lhypS _ ⊢ E'[..,ha,hb]] in
+		[Γ ⊢ l⊗LS (\ha. \hb. F[..,ha,hb]) #h]
 	)
 
+  % ⊗L/_: commute cut into ⊗L body
   | ([Γ ⊢ l⊗LS (\ha. \hb. D') h], [Γ, x : lhypS _ ⊢ E]) ⇒
 	let [Γ, ha : lhypS _, hb : lhypS _ ⊢ F] =
-	cut-admis _ _
-	   [Γ, ha : lhypS _, hb : lhypS _ ⊢ D']
+	cut-admis _ _ [Γ, ha : lhypS _, hb : lhypS _ ⊢ D']
 	   [Γ, ha : lhypS _, hb : lhypS _, x : lhypS A[] ⊢ E[..,x]] in
 	[Γ ⊢ l⊗LS (\ha. \hb. F[..,ha,hb]) h]
 
-
+  % ⊃R/⊗L: commute — ⊃R on the left, ⊗L on the right
   | ([Γ ⊢ l⊃RS (\h. D')], [Γ, x : lhypS _ ⊢ l⊗LS (\ha. \hb. E') h]) ⇒
-	(case   [Γ, x : lhypS _ ⊢ h] of
-	  |  [Γ, x : lhypS _ ⊢ #h[..]]  ⇒
-		 let [Γ, ha : lhypS _, hb : lhypS _ ⊢ F] =
-		 cut-admis _ _
-		    [Γ, ha : lhypS _, hb : lhypS _ ⊢ l⊃RS (\h. D'[.., h])]
-		    [Γ, ha : lhypS _, hb : lhypS _, x : lhypS _ ⊢ E'[.., ha, hb]] in
-		 [Γ ⊢ l⊗LS (\ha. \hb. F[.., ha, hb]) #h]
+	(case [Γ, x : lhypS _ ⊢ h] of
+	  | [Γ, x : lhypS _ ⊢ #h[..]] ⇒
+		let [Γ, ha : lhypS _, hb : lhypS _ ⊢ F] =
+		cut-admis _ _ [Γ, ha : lhypS _, hb : lhypS _ ⊢ l⊃RS (\h. D'[..,h])]
+		   [Γ, ha : lhypS _, hb : lhypS _, x : lhypS _ ⊢ E'[..,ha,hb]] in
+		[Γ ⊢ l⊗LS (\ha. \hb. F[..,ha,hb]) #h]
 	)
 
+  % _/⊗R0: E concludes with atomic ⊗R; wrap with snip2 according to which
+  %        arguments are x (diagonal case gets elig_h/l⊗R0S/3)
   | ([Γ ⊢ D'], [Γ, x : lhypS _ ⊢ l⊗R0S h1 h2]) ⇒
 	(case ([Γ, x : lhypS _ ⊢ h1], [Γ, x : lhypS _ ⊢ h2]) of
-	  |  ([Γ, x : lhypS _ ⊢ #h1[..]], [Γ, x : lhypS _ ⊢ #h2[..]]) ⇒ [Γ ⊢ l⊗R0S #h1 #h2]
+	  | ([Γ, x : lhypS _ ⊢ #h1[..]], [Γ, x : lhypS _ ⊢ #h2[..]]) ⇒
+		[Γ ⊢ l⊗R0S #h1 #h2]
 	  | ([Γ, x : lhypS _ ⊢ x], [Γ, x : lhypS _ ⊢ #h2[..]]) ⇒
-		[Γ ⊢ lsnip2S D'
-			     (\h. l⊗R0S h #h2[..])
-			     (elig_h/l⊗R0S/1 #h2)]
+		[Γ ⊢ lsnip2S D' (\h. l⊗R0S h #h2[..]) (elig_h/l⊗R0S/1 #h2)]
 	  | ([Γ, x : lhypS _ ⊢ #h1[..]], [Γ, x : lhypS _ ⊢ x]) ⇒
-		[Γ ⊢ lsnip2S D'
-			     (\h. l⊗R0S  #h1[..] h)
-			     (elig_h/l⊗R0S/2 #h1)]
-	  |  ([Γ, x : lhypS A[] ⊢ x], [Γ, x : lhypS A[] ⊢ x]) ⇒
-		 [Γ ⊢ lsnip2S D' (\h. l⊗R0S h h) ((elig_h/l⊗R0S/3 ) : elig_h (\x.  l⊗R0S x x))]
+		[Γ ⊢ lsnip2S D' (\h. l⊗R0S #h1[..] h) (elig_h/l⊗R0S/2 #h1)]
+	  | ([Γ, x : lhypS A[] ⊢ x], [Γ, x : lhypS A[] ⊢ x]) ⇒
+		[Γ ⊢ lsnip2S D' (\h. l⊗R0S h h) (elig_h/l⊗R0S/3 : elig_h (\x. l⊗R0S x x))]
 	)
 
+  % ⊗R0/⊃L0: split on whether h3 (the antecedent witness) is x or ambient
   | ([Γ ⊢ l⊗R0S h1 h2], [Γ, x : lhypS _ ⊢ l⊃L0S h3 h4]) ⇒
 	(case [Γ, x : lhypS _ ⊢ h3] of
 	  | [Γ, x : lhypS _ ⊢ x] ⇒
-		let [Γ, x : lhypS _  ⊢ #h4[..]] = [Γ, x : lhypS _ ⊢ h4] in
-		[Γ ⊢ lsnip2S ( l⊗R0S h1 h2) (\h. l⊃L0S h h4) (elig_h/l⊃L0S #h4[..]) ]
+		let [Γ, x : lhypS _ ⊢ #h4[..]] = [Γ, x : lhypS _ ⊢ h4] in
+		[Γ ⊢ lsnip2S (l⊗R0S h1 h2) (\h. l⊃L0S h h4) (elig_h/l⊃L0S #h4[..])]
 	  | [Γ, x : lhypS _ ⊢ #h[..]] ⇒
-		let [Γ, x : lhypS _  ⊢ #h4[..]] = [Γ, x : lhypS _ ⊢ h4] in
+		let [Γ, x : lhypS _ ⊢ #h4[..]] = [Γ, x : lhypS _ ⊢ h4] in
 		[Γ ⊢ l⊃L0S #h #h4]
 	)
-
 ;
 
 
-
-
+% Eliminate explicit cuts from a lconcS-cut proof, producing a cut-free lconcS proof.
+% Structural cases recurse; the lcutS-cut case dispatches to cut-admis.
 rec cut-elim : {Γ : lctxS} [Γ ⊢ lconcS-cut A[]] → [Γ ⊢ lconcS A[]] =
 / total 1 /
-mlam Γ ⇒ fn D ⇒ case D of
+mlam Γ ⇒ fn D ⇒
+case D of
   | [Γ ⊢ lcutS-cut D1 (\h. D2)] ⇒
-	let [Γ ⊢ D1'] = cut-elim _ [Γ ⊢ D1] in
+	let [Γ ⊢ D1']              = cut-elim _ [Γ ⊢ D1] in
 	let [Γ, x : lhypS _ ⊢ D2'] = cut-elim _ [Γ, x : lhypS _ ⊢ D2] in
 	cut-admis _ _ [Γ ⊢ D1'] [Γ, x : lhypS _ ⊢ D2']
+
   | [Γ ⊢ linitialS-cut #h] ⇒ [Γ ⊢ linitialS #h]
+
   | [Γ ⊢ l⊃RS-cut (\h. D')] ⇒
-	let [Γ, h:lhypS _ ⊢ F] = cut-elim _ [Γ, h:lhypS _ ⊢ D'] in
+	let [Γ, h : lhypS _ ⊢ F] = cut-elim _ [Γ, h : lhypS _ ⊢ D'] in
 	[Γ ⊢ l⊃RS (\h. F[..,h])]
+
   | [Γ ⊢ l⊃L0S-cut h1 h2] ⇒ [Γ ⊢ l⊃L0S h1 h2]
 
   | [Γ ⊢ lsnip1S-cut (l⊃L0S-cut #h1 #h2) (elig_c/l⊃L0S-cut #h1 #h2) (\h. D2)] ⇒
 	let [Γ, h : lhypS _ ⊢ D2'] = cut-elim _ [Γ, h : lhypS _ ⊢ D2] in
-	[Γ ⊢ lsnip1S (l⊃L0S #h1 #h2) (elig_c/l⊃L0S #h1 #h2) (\h. D2'[.., h])]
+	[Γ ⊢ lsnip1S (l⊃L0S #h1 #h2) (elig_c/l⊃L0S #h1 #h2) (\h. D2'[..,h])]
+
   | [Γ ⊢ lsnip2S-cut D1 (\h. l⊃L0S-cut h #y[..]) (elig_h/l⊃L0S-cut #y)] ⇒
 	let [Γ ⊢ D1'] = cut-elim _ [Γ ⊢ D1] in
 	[Γ ⊢ lsnip2S D1' (\h. l⊃L0S h #y[..]) (elig_h/l⊃L0S #y)]
 
-  | [Γ ⊢ l⊗R0S-cut h1 h2] ⇒  [Γ ⊢ l⊗R0S h1 h2]
-  | [Γ ⊢  (l⊗LS-cut (\h1. \h2. D1)) h3] ⇒
-	let [Γ, h1 : lhypS _, h2 : lhypS _  ⊢ D1'] =
-	cut-elim _ [Γ, h1 : lhypS _, h2 : lhypS _  ⊢ D1] in
+  | [Γ ⊢ l⊗R0S-cut h1 h2] ⇒ [Γ ⊢ l⊗R0S h1 h2]
+
+  | [Γ ⊢ l⊗LS-cut (\h1. \h2. D1) h3] ⇒
+	let [Γ, h1 : lhypS _, h2 : lhypS _ ⊢ D1'] =
+	cut-elim _ [Γ, h1 : lhypS _, h2 : lhypS _ ⊢ D1] in
 	[Γ ⊢ l⊗LS (\h1. \h2. D1') h3]
 
   | [Γ ⊢ lsnip2S-cut D1 (\h. l⊗R0S-cut h #y[..]) (elig_h/l⊗R0S/1-cut #y)] ⇒
 	let [Γ ⊢ D1'] = cut-elim _ [Γ ⊢ D1] in
 	[Γ ⊢ lsnip2S D1' (\h. l⊗R0S h #y[..]) (elig_h/l⊗R0S/1 #y)]
+
   | [Γ ⊢ lsnip2S-cut D1 (\h. l⊗R0S-cut #y[..] h) (elig_h/l⊗R0S/2-cut #y)] ⇒
 	let [Γ ⊢ D1'] = cut-elim _ [Γ ⊢ D1] in
 	[Γ ⊢ lsnip2S D1' (\h. l⊗R0S #y[..] h) (elig_h/l⊗R0S/2 #y)]
 
   | [Γ ⊢ lsnip2S-cut D1 (\h. l⊗R0S-cut h h) (elig_h/l⊗R0S/3-cut)] ⇒
 	let [Γ ⊢ D1'] = cut-elim _ [Γ ⊢ D1] in
-	[Γ ⊢ lsnip2S D1' (\h. l⊗R0S h h) (elig_h/l⊗R0S/3)]
-
-
-
-
-
-
-
-
-
+	[Γ ⊢ lsnip2S D1' (\h. l⊗R0S h h) elig_h/l⊗R0S/3]
 ;
