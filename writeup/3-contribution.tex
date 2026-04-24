@@ -240,12 +240,12 @@ sub-derivations:
 \begin{lstlisting}
 rec cut-elim : {Γ : lctxS} [Γ ⊢ lconcS-cut A[]] → [Γ ⊢ lconcS A[]] =
 / total 1 /
-mlam Γ ⇒ fn D => case D of
+mlam Γ ⇒ fn D ⇒ case D of
   | [Γ ⊢ lcutS-cut D1 (\h. D2)] ⇒
     cut-admis _ _ (cut-elim _ [Γ ⊢ D1]) (cut-elim _ [Γ, x : lhypS _ ⊢ D2])
-  | [Γ ⊢ l⊃L0S-cut h1 h2]            => [Γ ⊢ l⊃L0S h1 h2]
-  | [Γ ⊢ l⊗R0S-cut h1 h2]            => [Γ ⊢ l⊗R0S h1 h2]
-  | [Γ ⊢ l⊗LS-cut (\h1. \h2. D1) h3] =>
+  | [Γ ⊢ l⊃L0S-cut h1 h2]            ⇒ [Γ ⊢ l⊃L0S h1 h2]
+  | [Γ ⊢ l⊗R0S-cut h1 h2]            ⇒ [Γ ⊢ l⊗R0S h1 h2]
+  | [Γ ⊢ l⊗LS-cut (\h1. \h2. D1) h3] ⇒
     let [Γ, h1 : lhypS _, h2 : lhypS _ ⊢ D1'] =
       cut-elim _ [Γ, h1 : lhypS _, h2 : lhypS _ ⊢ D1] in
     [Γ ⊢ l⊗LS (\h1. \h2. D1') h3]   ...
