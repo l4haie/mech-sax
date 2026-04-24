@@ -1,17 +1,13 @@
 \section{Conclusion}
 \label{section:conclusion}
 
-We report on a mechanization of the proof theory of Soprillo, a fragment of SAX
-covering identity, implication, tensor, and snips, in the proof assistant
-Beluga. Specifically, we mechanize the translation between Soprillo and the
-sequent calculus $G_3$, and present mechanized proofs of cut admissibility, cut
-elimination, and the subformula property.
+This paper presents a mechanization of the proof theory of SAX in Beluga.
+Specifically, we mechanize the translation between the full SAX system and
+$G_3$, and present mechanized proofs of cut admissibility, cut elimination,
+and the subformula property for Soprillo, a fragment of SAX covering
+identity, implication, tensor, and snips.
 
 \subsection{Future Work}
-
-% Move the SNAX part to the end. Saying that SNAX should follow easily from our
-% mechanization is misleading. Cut-elimination (and the subformula property)
-% doesn't hold in SNAX.
 
 The most obvious avenue for future work is to extend our mechanization to the
 complete SAX system, adding connectives such as $\with$, $\lor$, and
@@ -19,10 +15,6 @@ $\mathbf{1}$. This would further demonstrate the adaptability of our
 representations and proof techniques. A mechanization of SAX within adjoint
 logic would similarly allow for meta-theoretic guarantees regarding the
 message-passing interpretation of SAX.
-
-% Further, a mechanization of SNAX should
-% follow relatively easily from our work, given that SNAX makes eligibility a
-% first-class concept building directly on the proof theory we have mechanized.
 
 Another natural step is a mechanization of the shared memory interpretation of
 SAX, along with its properties including progress and termination.
