@@ -3,26 +3,28 @@
 
 \subsection{Core Proof-Theoretic Results}
 
-Listed below are the proof-theoretic results that we have mechanized for our
-representative subset of SAX, covering identity ($\texttt{id}$), implication
-(${\supset}R$, ${\supset}L^0$), tensor (${\otimes}R^0$, ${\otimes}L$),
-and snips ($\texttt{snip}^1$, $\texttt{snip}^2$). 
+We mechanize the following proof-theoretic results for a representative
+subset of SAX, covering identity, implication (${\supset}R$,
+${\supset}L^0$), tensor (${\otimes}R^0$, ${\otimes}L$), and snips
+($\texttt{snip}^1$, $\texttt{snip}^2$). The remaining connectives of
+SAX (${\vee}$, ${\with}$, $\mathbf{1}$) follow the same patterns and are
+left as future work.
 
 \begin{theorem}[Translations between $G_3$ and SAX]
   $\Gamma \vdash A$ in $G_3$ iff $\Gamma \vdash A$ in SAX.
 \end{theorem}
 
-In the following theorems, we say a derivation is cut-free if it contains
-no uses of cut, but may contain snips.
+In the following theorems, a derivation is \emph{cut-free} if it
+contains no uses of cut but may contain snips.
 
 \begin{theorem}[Admissibility of Cut]
   If there are cut-free derivations of $\Gamma \vdash x : A$ and
-  $\Gamma, x : A \vdash z : C$, then there exists a cut-free derivation
-  of $\Gamma \vdash z : C$.
+  $\Gamma, x : A \vdash z : C$, there exists a cut-free derivation of
+  $\Gamma \vdash z : C$.
 \end{theorem}
 
 \begin{theorem}[Cut Elimination in SAX]
-  If there is a derivation of $\Gamma \vdash x : A$, then there is a
+  If there is a derivation of $\Gamma \vdash x : A$, there is a
   cut-free derivation of the same sequent.
 \end{theorem}
 
@@ -31,175 +33,515 @@ no uses of cut, but may contain snips.
   subformulas of formulas in $\Gamma$ or $A$.
 \end{theorem}
 
-
 \subsection{Encoding SAX in Beluga}
 
-% TODO add relevant code snippets
-
-
-\subsection{Eligibility and Irrelevance}
+We encode SAX in Beluga using HOAS. Hypotheses are represented as
+variables in a context of schema \texttt{lctxS} with entries of type
+\texttt{lhypS~A}. Derivations of $\Gamma \vdash A$ are terms of type
+\texttt{[$\Gamma \vdash$  lconcS~A[]]}. Binding in rules such as ${\supset}R$
+is handled by LF function types, so weakening and substitution are
+inherited from the framework. The constructors of \texttt{lconcS}
+correspond one-for-one to the rules of SAX; adequacy holds because
+\texttt{lhypS} has no constructors, so its only inhabitants are context
+variables.
 
 \begin{lstlisting}
-  LF lconcS : o → type =
-    ...
-    | l⊃RS : (lhypS A → lconcS B) → lconcS (A ⊃ B)
-    | l⊃L0S : lhypS A → lhypS (A ⊃ B) → lconcS B
-    ...    
-  and
-  LF elig_c : lconcS A → type =
-    | elig_c/l⊃L0S : {x : lhypS A} {y : lhypS (A ⊃ B)}
-                     elig_c (l⊃L0S x y)
-  and
-  LF elig_h : (lhypS A → lconcS B) → type =
-    | elig_h/l⊃L0S : {y : lhypS (A ⊃ B)}
-                     elig_h (\x. l⊃L0S x y)
-  ;
+LF lhypS : o -> type = ;
+LF lconcS : o -> type =
+  | linitialS : {h : lhypS A} lconcS A
+  | l⊃RS      : (lhypS A -> lconcS B) -> lconcS (A ⊃ B)
+  | l⊃L0S     : lhypS A -> lhypS (A ⊃ B) -> lconcS B
+  | lsnip1S   : {D : lconcS A} elig_c D -> (lhypS A -> lconcS B) -> lconcS B
+  | lsnip2S   : lconcS A -> {E : lhypS A -> lconcS B} elig_h E -> lconcS B
+  | l⊗R0S     : lhypS A -> lhypS B -> lconcS (A ⊗ B)
+  | l⊗LS      : (lhypS A -> lhypS B -> lconcS C) -> lhypS (A ⊗ B) -> lconcS C
 \end{lstlisting}
 
+One notable feature of the encoding concerns the two variable annotations
+from the paper's labeled calculus. Variables marked as \emph{irrelevant}
+(superscript $0$) are those that appear as side formulas of an axiom or
+identity and are never used in the derivation. In Beluga this annotation
+is unnecessary: because LF has structural weakening, unused hypotheses
+can simply be ignored. A derivation term in context $[\Gamma, x :
+\texttt{lhypS}~A]$ where $x$ does not appear free can always be weakened
+back to $[\Gamma]$, directly corresponding to dropping an irrelevant
+antecedent. The irrelevance superscripts in the paper are therefore
+absorbed into the framework's own treatment of unused variables.
 
-\subsection{Translation Between G3 and SAX}
+\subsection{Eligibility as a Predicate on Derivation Terms}
 
-Theorem~1 states that $G_3$ and SAX derive the same sequents. We mechanize both
-directions as recursive functions over derivations that translate hypotheses
-between the two systems using a relation pairing up the two contexts hypothesis
-by hypothesis. Because SAX inherits the invertible rules from $G_3$, they are
-translated in both directions by directly applying the corresponding rule. The
-interesting cases are the noninvertible rules, which correspond to axioms in
-SAX.
+The central design challenge is representing \emph{eligibility}. In the
+paper, a variable occurrence in a derivation is eligible if it was
+introduced by an axiom in an eligible position. The two forms of snip
+differ in which premise must be eligible: $\texttt{Snip}^1$ requires an
+eligible succedent in the first premise, while $\texttt{Snip}^2$ requires
+an eligible antecedent in the second.
 
-The direction from $G_3$ to SAX, showing that $G_3$ derives no more than SAX,
-proceeds by showing that each noninvertible $G_3$ rules can be derived using
-cuts and axioms. For instance, ${\supset}L$ which has no direct counterpart in
-SAX, can be simulated using two nested cuts against the axiom ${\supset}L^0$:
+A natural first attempt is to represent eligibility as a predicate on
+hypothesis variables directly, \texttt{LF elig\_h : lhypS A -> type},
+adding eligibility witnesses to the context whenever a hypothesis is
+introduced at an eligible position. This fails because LF contexts in
+Beluga are structural: weakening is always available, so an
+\texttt{elig\_h h} witness could be assumed for any variable without it
+having been introduced by an axiom. The subformula property would then
+break, since an arbitrarily weakened eligibility witness carries no
+information about which axiom the variable came from, making it
+impossible to extract a subformula relationship for the cut formula's
+type.
+
+Instead we define eligibility as predicates indexed directly over
+derivation terms:
+
 \begin{lstlisting}
-  rec seq2sax : (A : [⊢ o]) rel-ctx-S [Γ] [Γ'] → [Γ ⊢ conc A[]] → [Γ' ⊢ concS A[]] =
-  / total 2 /
-  fn R D ⇒ case D of
-    | [Γ ⊢ ⊃L c1 (\h. c2) H] ⇒
-      let [Γ' ⊢ HS] = hyp2hypS R [Γ ⊢ H] in
-      let [Γ' ⊢ c1S] = seq2sax R [Γ ⊢ c1] in
-      let [Γ', x : hypS B[] ⊢ c2S] = seq2sax (cons-S R) [Γ, x : hyp _ ⊢ c2] in
-      [Γ' ⊢ cutS (cutS c1S (\h. ⊃L0S h HS[..])) (\h. c2S)]
-    ...
-  ;
+LF elig_c : lconcS A -> type =
+  | elig_c/l⊃L0S : {x : lhypS A} {y : lhypS (A ⊃ B)} elig_c (l⊃L0S x y)
+and
+LF elig_h : (lhypS A -> lconcS B) -> type =
+  | elig_h/l⊃L0S   : {y : lhypS (A ⊃ B)} elig_h (\x. l⊃L0S x y)
+  | elig_h/l⊗R0S/1 : {z : lhypS B}        elig_h (\y. l⊗R0S (y : lhypS A) z)
+  | elig_h/l⊗R0S/2 : {y : lhypS A}        elig_h (\z. l⊗R0S y (z : lhypS B))
+  | elig_h/l⊗R0S/3 :                       elig_h (\y. l⊗R0S y y)
 \end{lstlisting}
 
-The other direction, from SAX to $G_3$, shows that each SAX axiom can be derived
-in $G_3$ using the corresponding rule and identity. For instance, $\supset L^0$
-is translated as an application of $\supset L$ in $G_3$ with identity proofs for
-both premises:
+\texttt{elig\_c~D} holds when the closed derivation \texttt{D} ends in
+an axiom with an eligible succedent. \texttt{elig\_h~E} holds when the
+function \texttt{E} maps its abstracted variable to an axiom in which
+that variable occupies an eligible antecedent position. Because the
+certificates are indexed over derivation terms rather than variables,
+they cannot be introduced by weakening. This is what makes the
+subformula property go through: the \texttt{elig} evidence identifies
+the specific axiom the eligible formula came from, and from that a
+subformula witness can be read off directly.
+
+The four constructors of \texttt{elig\_h} enumerate every way a single
+variable can appear eligibly in an axiom in our fragment. Three are
+routine. The fourth, \texttt{elig\_h/l$\otimes$R0S/3}, covers the degenerate
+case where both arguments of ${\otimes}R^0$ are the same variable, i.e.\
+a derivation $\Gamma^0, x^* : A \vdash x : A \otimes A$. This arises
+due to contraction in the intuitionistic setting and has no analogue in
+a linear system. Extending the mechanization to additional connectives
+requires only adding the corresponding \texttt{elig\_h} constructors for
+each eligible position in the new axioms, along with the matching cases
+in the proofs below.
+
+This approach is related to the linearity predicates of Sano, Kavanagh,
+and Pientka~\cite{Sanomech}, who encode linearity constraints for
+session types as LF predicates within type judgments rather than using
+linear contexts. Their predicates track a global resource-usage property
+of channel variables; ours track a local positional property of a
+specific occurrence within an axiom. A variable can be eligible in one
+part of a derivation and ineligible in another, so the predicates are
+indexed over derivation terms rather than variables to capture this
+per-occurrence character.
+
+\subsection{Translation Between $G_3$ and SAX}
+
+Both directions of Theorem~1 are recursive functions over derivations
+using a relation \texttt{rel-ctx-S} pairing the two contexts hypothesis
+by hypothesis. Invertible rules are translated by applying the
+corresponding constructor directly. The interesting cases are the
+noninvertible rules, which appear as rules in $G_3$ but as zero-premise
+axioms in SAX.
+
+The direction from $G_3$ to SAX derives each noninvertible rule using
+cuts and axioms. For instance, ${\supset}L$ is simulated by two nested
+cuts against ${\supset}L^0$:
+
 \begin{lstlisting}
-  rec sax2seq : (A : [⊢ o]) rel-S-ctx [Γ'] [Γ] → [Γ' ⊢ concS A[]] → [Γ ⊢ conc A[]] =
-  / total 2 /
-  fn R D ⇒ case D of
-    | [Γ' ⊢ ⊃L0S HS1 HS2] ⇒
-      let [Γ ⊢ H1] = hypS2hyp R [Γ' ⊢ HS1] in
-      let [Γ ⊢ H2] = hypS2hyp R [Γ' ⊢ HS2] in
-      [Γ ⊢ ⊃L (initial H1) (\h. initial h) H2]
-    ...
-  ;
+rec seq2sax : (A : [|- o]) rel-ctx-S [Γ] [Γ'] -> [Γ |- conc A[]]
+              -> [Γ' |- concS A[]] =
+/ total 2 /
+fn R D => case D of
+  | [Γ |- ⊃L c1 (\h. c2) H] =>
+    let [Γ' |- HS]                = hyp2hypS R [Γ |- H] in
+    let [Γ' |- c1S]               = seq2sax R [Γ |- c1] in
+    let [Γ', x : hypS B[] |- c2S] = seq2sax (cons-S R) [Γ, x : hyp _ |- c2] in
+    [Γ' |- cutS (cutS c1S (\h. ⊃L0S h HS[..])) (\h. c2S)]  ...
 \end{lstlisting}
 
+The reverse direction derives each SAX axiom in $G_3$ using the
+corresponding rule with identity proofs for the premises. For
+${\supset}L^0$ this is one application of ${\supset}L$ with two identity
+sub-derivations:
+
+\begin{lstlisting}
+rec sax2seq : (A : [|- o]) rel-S-ctx [Γ'] [Γ] -> [Γ' |- concS A[]]
+              -> [Γ |- conc A[]] =
+/ total 2 /
+fn R D => case D of
+  | [Γ' |- ⊃L0S HS1 HS2] =>
+    let [Γ |- H1] = hypS2hyp R [Γ' |- HS1] in
+    let [Γ |- H2] = hypS2hyp R [Γ' |- HS2] in
+    [Γ |- ⊃L (initial H1) (\h. initial h) H2]  ...
+\end{lstlisting}
 
 \subsection{Admissibility of Cut and Cut Elimination}
 
-% Some representative cases, we can remove some or split them up but I'm not
-% sure which one we should actually keep
+Cut admissibility is proved as \texttt{cut-admis}, with totality
+justified by induction on the cut formula. The cases fall into three
+groups.
+
+First, when the cut variable is in an eligible position in either
+premise, the result is immediately a snip with no recursive call. For
+example, when \begin{lstlisting}$D = \texttt{l⊃L0S~h1~h2}$ \end{lstlisting} the succedent is directly
+eligible:
+
 \begin{lstlisting}
-  rec cut-admis : {Γ : lctxS} {A : [⊢ o]} [Γ ⊢ lconcS A[]]
-                  → [Γ, x:lhypS A[] ⊢ lconcS C[]]
-                  → [Γ ⊢ lconcS C[]] =
-  / total 1 /
-  mlam Γ A ⇒ fn D E ⇒
-  case (D, E) of
-    %% */_ 
-    | ([Γ ⊢ l⊃L0S h1 h2], [Γ, x : lhypS _ ⊢ E]) ⇒
-      [Γ ⊢ lsnip1S (l⊃L0S h1 h2) (elig_c/l⊃L0S h1 h2) (\h. E[..,h])]
-    %% ⊃R/⊃L0
-    | ([Γ ⊢ l⊃RS (\h. D1)], [Γ, x : lhypS _ ⊢ l⊃L0S h1 h2]) ⇒
-      (case ([Γ, x : lhypS _ ⊢ h2], [Γ, x : lhypS _ ⊢ h1]) of
-        | ([Γ, x : lhypS _ ⊢ x], [Γ, x : lhypS _ ⊢ #h1[..] ]) ⇒
-          [Γ ⊢ D1[..,#h1]]
-        | ([Γ, x : lhypS _ ⊢ #h2[..]], [Γ, x : lhypS _ ⊢ x]) ⇒
-          [Γ ⊢ lsnip2S (l⊃RS (\h. D1)) (\h. l⊃L0S h #h2[..]) (elig_h/l⊃L0S #h2[..])]
-        | ([Γ, x : lhypS _ ⊢ #h2[..]], [Γ, x : lhypS _ ⊢ #h1[..]]) ⇒
-          [Γ ⊢ l⊃L0S #h1 #h2]
-      )
-    %% _/Snip1
-    | ([Γ ⊢ D], [Γ, x : lhypS _ ⊢ lsnip1S E1 e (\h. E2)]) ⇒
-      let [Γ ⊢ F1] = cut-admis _ _ [Γ ⊢ D] [Γ, x : lhypS _  ⊢ E1] in
-      let [Γ, x : lhypS _ ⊢ F2] =
-        cut-admis _ _ [Γ, y:lhypS _ ⊢ D[..]] [Γ, x : lhypS _, y : lhypS _ ⊢ E2[..,x]] in
-      cut-admis _ _ [Γ ⊢ F1] [Γ, y : lhypS _ ⊢ F2]
-    %% _/Snip2
-    | ([Γ ⊢ D], [Γ, x : lhypS _ ⊢ lsnip2S E1 (\h. E2) e]) ⇒
-      let [Γ ⊢ F1] = cut-admis _ _ [Γ ⊢ D] [Γ, x : lhypS _  ⊢ E1] in
-      let [Γ,  x : lhypS _ ⊢ F2] =
-        cut-admis _ _ [Γ, y:lhypS _ ⊢ D[..]] [Γ, x : lhypS _, y : lhypS _ ⊢ E2[..,x]] in
-      cut-admis _ _ [Γ ⊢ F1] [Γ, y : lhypS _ ⊢ F2]
-    ...
-    ;
+  %% */_
+  | ([Γ |- l⊃L0S h1 h2], [Γ, x : lhypS _ |- E]) =>
+    [Γ |- lsnip1S (l⊃L0S h1 h2) (elig_c/l⊃L0S h1 h2) (\h. E[..,h])]
 \end{lstlisting}
 
-% `cut-elim` is less interesting, the type signature is enough
+Second, when the cut formula is principal in both premises, the cut is
+eliminated by substitution with a recursive call at a strictly smaller
+type. The ${\supset}R / {\supset}L^0$ case requires a three-way split on
+whether $h_1$ or $h_2$ in ${\supset}L^0$ is the cut variable $x$, since
+$x$ may appear in an eligible position in $E$ even when $D$ is
+${\supset}R$:
+
 \begin{lstlisting}
-  rec cut-elim : {Γ : lctxS} [Γ ⊢ lconcS-cut A[]] → [Γ ⊢ lconcS A[]] = ...
+  %% ⊃R/⊃L0
+  | ([Γ |- l⊃RS (\h. D1)], [Γ, x : lhypS _ |- l⊃L0S h1 h2]) =>
+    (case ([Γ, x : lhypS _ |- h2], [Γ, x : lhypS _ |- h1]) of
+      | ([Γ, x:_ |- x],       [Γ, x:_ |- #h1[..]]) => [Γ |- D1[..,#h1]]
+      | ([Γ, x:_ |- #h2[..]], [Γ, x:_ |- x])       =>
+          [Γ |- lsnip2S (l⊃RS (\h. D1)) (\h. l⊃L0S h #h2[..])
+                        (elig_h/l⊃L0S #h2[..])]
+      | ([Γ, x:_ |- #h2[..]], [Γ, x:_ |- #h1[..]]) => [Γ |- l⊃L0S #h1 #h2]
+    )
 \end{lstlisting}
 
+Third, when the cut formula is a side formula of the last rule, the cut
+is commuted past that rule. When $E$ ends with a snip, the outer cut is
+pushed inside both premises via two recursive calls; if eligibility is
+lost the snip becomes a general cut, which is permitted since the
+formula type is then a strict subformula of the cut type. A case worth
+noting is $\texttt{\_/l} \otimes \texttt{R0S}$, which requires enumerating all combinations
+of the cut variable $x$ appearing in the argument positions of the tensor
+axiom, including the degenerate case where both positions are the same
+variable:
+
+\begin{lstlisting}
+  | ([Γ |- D'], [Γ, x : lhypS _ |- l⊗R0S h1 h2]) =>
+    (case ([Γ, x : lhypS _ |- h1], [Γ, x : lhypS _ |- h2]) of
+      | ([Γ, x:_ |- #h1[..]], [Γ, x:_ |- #h2[..]]) => [Γ |- l⊗R0S #h1 #h2]
+      | ([Γ, x:_ |- x],       [Γ, x:_ |- #h2[..]]) =>
+          [Γ |- lsnip2S D' (\h. l⊗R0S h #h2[..])   (elig_h/l⊗R0S/1 #h2)]
+      | ([Γ, x:_ |- #h1[..]], [Γ, x:_ |- x])        =>
+          [Γ |- lsnip2S D' (\h. l⊗R0S #h1[..] h)   (elig_h/l⊗R0S/2 #h1)]
+      | ([Γ, x : lhypS A[] |- x], [Γ, x : lhypS A[] |- x]) =>
+          [Γ |- lsnip2S D' (\h. l⊗R0S h h) elig_h/l⊗R0S/3]
+    )
+\end{lstlisting}
+
+Cut elimination over a separate \texttt{lconcS-cut} type then applies
+\texttt{cut-admis} at each cut node after recursively processing the
+sub-derivations:
+
+\begin{lstlisting}
+rec cut-elim : {Γ : lctxS} [Γ |- lconcS-cut A[]] -> [Γ |- lconcS A[]] =
+/ total 1 /
+mlam Γ => fn D => case D of
+  | [Γ |- lcutS-cut D1 (\h. D2)] =>
+    cut-admis _ _ (cut-elim _ [Γ |- D1]) (cut-elim _ [Γ, x : lhypS _ |- D2])
+  | [Γ |- l⊃L0S-cut h1 h2]            => [Γ |- l⊃L0S h1 h2]
+  | [Γ |- l⊗R0S-cut h1 h2]            => [Γ |- l⊗R0S h1 h2]
+  | [Γ |- l⊗LS-cut (\h1. \h2. D1) h3] =>
+    let [Γ, h1 : lhypS _, h2 : lhypS _ |- D1'] =
+      cut-elim _ [Γ, h1 : lhypS _, h2 : lhypS _ |- D1] in
+    [Γ |- l⊗LS (\h1. \h2. D1') h3]   ...
+\end{lstlisting}
 
 \subsection{Subformula Property}
 
-\begin{lstlisting}
-  inductive subfProp : {Γ : lctxS} {Σ : [⊢ formlist]} {D : [Γ ⊢ lconcS A[]]} ctype =
-    | subfProp/lsnip1 :
-        (D : [Γ ⊢ lconcS A[]])
-        (E: [Γ, x : lhypS A[] ⊢ lconcS B[]])
-        {e : [Γ ⊢ elig_c D]}
-        subfProp [Γ] [⊢ Σ] [Γ ⊢ D]
-        → [⊢ inSig A Σ]
-        → subfProp [Γ, x : lhypS A[]] [⊢ Σ] [Γ, x : lhypS A[] ⊢ E]
-        → subfProp [Γ] [⊢ Σ] [Γ ⊢ lsnip1S D e (\x. E[.., x])]
-    | subfProp/lsnip2 :
-        {e : [Γ  ⊢ elig_h (\x. E)]}
-        subfProp [Γ] [⊢ Σ] [Γ ⊢ D]
-        → [⊢ inSig A Σ]
-        → subfProp [Γ, x : lhypS A[]] [⊢ Σ] [Γ, x : lhypS A[] ⊢ E]
-        → subfProp [Γ] [⊢ Σ] [Γ ⊢ lsnip2S D (\x. E[.., x]) e]
-    ...
-    ;
-\end{lstlisting}
-
+We prove the subformula property in a more general form than the
+statement in DeYoung et al.: the predicate \texttt{subfProp} is
+parametrized over an arbitrary formula list $\Sigma$ rather than the
+fixed set $\Gamma \cup \{A\}$. This generality is necessary because the
+induction must extend $\Sigma$ when descending into premises that
+introduce new hypotheses, and fixing $\Sigma$ at the top level would
+require reconstructing the list at each step. The original statement is
+recovered by instantiating $\Sigma = \Gamma \cup \{A\}$ at the root.
 
 \begin{lstlisting}
-  rec subformula-property : {Γ : lctxS} {D : [Γ ⊢ lconcS A[]]}
-                            → ctxInSig  [Γ] [⊢ Σ]
-                            → [⊢ inSig A Σ]
-                            → subfProp [Γ] [⊢ Σ] [Γ ⊢ D] =
-  / total 1 /
-  mlam Γ D ⇒ fn ci goal ⇒
-  case [Γ ⊢ D] of
-    | [Γ ⊢ lsnip1S D' e (\h. E')] ⇒
-      (case [Γ ⊢ e] of
-        | [Γ ⊢ elig_c/l⊃L0S #h1 #h2] ⇒
-          let ih2    = lookup ci [Γ ⊢ #h2] in
-          let isig_B = subf-inSig [⊢ subf/⊃2 subf/refl] ih2 in
-          let ih1    = lookup ci [Γ ⊢ #h1] in
-          let sp_D   = subfProp/l⊃L0S [Γ ⊢ #h1] [Γ ⊢ #h2] ih1 ih2 in
-          let ci'    = ctxInSig/cons ci isig_B in
-          let sp_E   = subformula-property _ [Γ, h : lhypS _ ⊢ E'] ci' goal in
-          subfProp/lsnip1 _ sp_D isig_B sp_E
-      )
-    | [Γ ⊢ lsnip2S D' (\h. E') e] ⇒
-      (case [Γ ⊢ e] of
-        | [Γ ⊢ elig_h/l⊃L0S #y] ⇒
-          let ih_y   = lookup ci [Γ ⊢ #y] in
-          let isig_A = subf-inSig [⊢ subf/⊃1 subf/refl] ih_y in
-          let ci'    = ctxInSig/cons ci isig_A in
-          let sp_D   = subformula-property _ [Γ ⊢ D'] ci isig_A in
-          let sp_E   = subformula-property _ [Γ, h : lhypS _ ⊢ E'] ci' goal in
-          subfProp/lsnip2 _ sp_D isig_A sp_E
-      )
-    ...      
-    ;
-
+inductive subfProp : {Γ : lctxS} {Σ : [|- formlist]}
+                     {D : [Γ |- lconcS A[]]} ctype =
+  | subfProp/initial :
+      {#h : #[Γ |- lhypS A[]]} [|- inSig A Σ]
+      -> subfProp [Γ] [|- Σ] [Γ |- linitialS #h]
+  | subfProp/l⊃L0S :
+      {#h1 : #[Γ |- lhypS A[]]} {#h2 : #[Γ |- lhypS (A[] ⊃ B[])]}
+      [|- inSig A Σ] -> [|- inSig (A ⊃ B) Σ]
+      -> subfProp [Γ] [|- Σ] [Γ |- l⊃L0S #h1 #h2]
+  | subfProp/l⊗R0S :
+      {#h1 : #[Γ |- lhypS A[]]} {#h2 : #[Γ |- lhypS B[]]}
+      [|- inSig A Σ] -> [|- inSig B Σ]
+      -> subfProp [Γ] [|- Σ] [Γ |- l⊗R0S #h1 #h2]
+  | subfProp/lsnip1 :
+      (D : [Γ |- lconcS A[]]) (E : [Γ, x : lhypS A[] |- lconcS B[]])
+      {e : [Γ |- elig_c D]}
+      subfProp [Γ] [|- Σ] [Γ |- D] -> [|- inSig A Σ]
+      -> subfProp [Γ, x : lhypS A[]] [|- Σ] [Γ, x : lhypS A[] |- E]
+      -> subfProp [Γ] [|- Σ] [Γ |- lsnip1S D e (\x. E[..,x])]
+  | subfProp/lsnip2 :
+      {e : [Γ |- elig_h (\x. E)]}
+      subfProp [Γ] [|- Σ] [Γ |- D] -> [|- inSig A Σ]
+      -> subfProp [Γ, x : lhypS A[]] [|- Σ] [Γ, x : lhypS A[] |- E]
+      -> subfProp [Γ] [|- Σ] [Γ |- lsnip2S D (\x. E[..,x]) e]
+  ...
 \end{lstlisting}
+
+Three helper lemmas support the main proof. \texttt{lookup} extracts a
+membership proof from the context invariant \texttt{ctxInSig~$[\Gamma]$~[{$\vdash$}~{$\Sigma$}]},
+which asserts that every formula type in $\Gamma$ is a subformula of
+some element of $\Sigma$; given a hypothesis variable in $\Gamma$ it
+returns an \texttt{inSig} proof for its type. \texttt{subf-trans}
+establishes transitivity of the subformula relation by induction on its
+second argument. \texttt{subf-inSig} promotes a subformula witness into
+a list membership proof, used wherever the proof descends into a
+sub-connective: given $B \leq A$ and $A \in \Sigma$ it produces
+$B \in \Sigma$.
+
+The main proof \texttt{subformula-property} proceeds by induction over
+the structure of the derivation. In the snip cases the \texttt{elig}
+evidence identifies the specific axiom the eligible formula came from,
+and \texttt{subf-inSig} is called with the appropriate subformula
+witness to produce \texttt{inSig A $\Sigma$}. The context invariant is then
+extended via \texttt{ctxInSig/cons} and both premises proceed
+recursively. The case for \texttt{elig\_h/l$\otimes$R0S/1~\#z}, for example,
+extracts from the \texttt{inSig} proof for $A \otimes B$ a membership
+proof for $A$:
+
+\begin{lstlisting}
+  | [Γ |- lsnip2S D' (\h. E') e] =>
+    (case [Γ |- e] of
+      ...
+      | [Γ |- elig_h/l⊗R0S/1 #z] =>
+        let ih_z   = lookup ci [Γ |- #z] in
+        let isig_A = subf-inSig [|- subf/⊗1 subf/refl] goal in
+        let ci'    = ctxInSig/cons ci isig_A in
+        let sp_D   = subformula-property _ [Γ |- D'] ci isig_A in
+        let sp_E   = subformula-property _ [Γ, h : lhypS _ |- E'] ci' goal in
+        subfProp/lsnip2 _ sp_D isig_A sp_E
+      ...
+    )
+\end{lstlisting}
+
+This is precisely the point where the original predicate-on-variables
+approach would fail: a weakened \texttt{elig\_h h} witness carries no
+information about which axiom \texttt{h} came from, so there would be no
+basis for the \texttt{subf-inSig} call. By indexing over derivation terms
+instead, the \texttt{elig\_h/l$\otimes$R0S/1} constructor directly witnesses
+that the abstracted variable is the first component of a tensor axiom,
+from which the subformula relationship $A \leq A \otimes B$ is immediate.
+Extending the mechanization to additional connectives requires adding the
+corresponding \texttt{elig\_h} constructors, the matching cases in
+\texttt{cut-admis}, and the appropriate \texttt{subf-inSig} calls in
+\texttt{subformula-property}; the structure of each proof obligation is
+uniform with what is presented here.
+
+%\section{Contributions}
+%\label{section:contribution}
+
+%\subsection{Core Proof-Theoretic Results}
+
+%Listed below are the proof-theoretic results that we have mechanized for our
+%representative subset of SAX, covering identity ($\texttt{id}$), implication
+%(${\supset}R$, ${\supset}L^0$), tensor (${\otimes}R^0$, ${\otimes}L$),
+%and snips ($\texttt{snip}^1$, $\texttt{snip}^2$). 
+
+%\begin{theorem}[Translations between $G_3$ and SAX]
+  %$\Gamma \vdash A$ in $G_3$ iff $\Gamma \vdash A$ in SAX.
+%\end{theorem}
+
+%In the following theorems, we say a derivation is cut-free if it contains
+%no uses of cut, but may contain snips.
+
+%\begin{theorem}[Admissibility of Cut]
+  %If there are cut-free derivations of $\Gamma \vdash x : A$ and
+  %$\Gamma, x : A \vdash z : C$, then there exists a cut-free derivation
+  %of $\Gamma \vdash z : C$.
+%\end{theorem}
+
+%\begin{theorem}[Cut Elimination in SAX]
+  %If there is a derivation of $\Gamma \vdash x : A$, then there is a
+  %cut-free derivation of the same sequent.
+%\end{theorem}
+
+%\begin{theorem}[Subformula Property]
+  %All formulas in a cut-free derivation of $\Gamma \vdash x : A$ are
+  %subformulas of formulas in $\Gamma$ or $A$.
+%\end{theorem}
+
+
+%\subsection{Encoding SAX in Beluga}
+
+%% TODO add relevant code snippets
+
+
+%\subsection{Eligibility and Irrelevance}
+
+%\begin{lstlisting}
+  %LF lconcS : o → type =
+    %...
+    %| l⊃RS : (lhypS A → lconcS B) → lconcS (A ⊃ B)
+    %| l⊃L0S : lhypS A → lhypS (A ⊃ B) → lconcS B
+    %...    
+  %and
+  %LF elig_c : lconcS A → type =
+    %| elig_c/l⊃L0S : {x : lhypS A} {y : lhypS (A ⊃ B)}
+                     %elig_c (l⊃L0S x y)
+  %and
+  %LF elig_h : (lhypS A → lconcS B) → type =
+    %| elig_h/l⊃L0S : {y : lhypS (A ⊃ B)}
+                     %elig_h (\x. l⊃L0S x y)
+  %;
+%\end{lstlisting}
+
+
+%\subsection{Translation Between G3 and SAX}
+
+%Theorem~1 states that $G_3$ and SAX derive the same sequents. We mechanize both
+%directions as recursive functions over derivations that translate hypotheses
+%between the two systems using a relation pairing up the two contexts hypothesis
+%by hypothesis. Because SAX inherits the invertible rules from $G_3$, they are
+%translated in both directions by directly applying the corresponding rule. The
+%interesting cases are the noninvertible rules, which correspond to axioms in
+%SAX.
+
+%The direction from $G_3$ to SAX, showing that $G_3$ derives no more than SAX,
+%proceeds by showing that each noninvertible $G_3$ rules can be derived using
+%cuts and axioms. For instance, ${\supset}L$ which has no direct counterpart in
+%SAX, can be simulated using two nested cuts against the axiom ${\supset}L^0$:
+%\begin{lstlisting}
+  %rec seq2sax : (A : [⊢ o]) rel-ctx-S [Γ] [Γ'] → [Γ ⊢ conc A[]] → [Γ' ⊢ concS A[]] =
+  %/ total 2 /
+  %fn R D ⇒ case D of
+    %| [Γ ⊢ ⊃L c1 (\h. c2) H] ⇒
+      %let [Γ' ⊢ HS] = hyp2hypS R [Γ ⊢ H] in
+      %let [Γ' ⊢ c1S] = seq2sax R [Γ ⊢ c1] in
+      %let [Γ', x : hypS B[] ⊢ c2S] = seq2sax (cons-S R) [Γ, x : hyp _ ⊢ c2] in
+      %[Γ' ⊢ cutS (cutS c1S (\h. ⊃L0S h HS[..])) (\h. c2S)]
+    %...
+  %;
+%\end{lstlisting}
+
+%The other direction, from SAX to $G_3$, shows that each SAX axiom can be derived
+%in $G_3$ using the corresponding rule and identity. For instance, $\supset L^0$
+%is translated as an application of $\supset L$ in $G_3$ with identity proofs for
+%both premises:
+%\begin{lstlisting}
+  %rec sax2seq : (A : [⊢ o]) rel-S-ctx [Γ'] [Γ] → [Γ' ⊢ concS A[]] → [Γ ⊢ conc A[]] =
+  %/ total 2 /
+  %fn R D ⇒ case D of
+    %| [Γ' ⊢ ⊃L0S HS1 HS2] ⇒
+      %let [Γ ⊢ H1] = hypS2hyp R [Γ' ⊢ HS1] in
+      %let [Γ ⊢ H2] = hypS2hyp R [Γ' ⊢ HS2] in
+      %[Γ ⊢ ⊃L (initial H1) (\h. initial h) H2]
+    %...
+  %;
+%\end{lstlisting}
+
+
+%\subsection{Admissibility of Cut and Cut Elimination}
+
+%% Some representative cases, we can remove some or split them up but I'm not
+%% sure which one we should actually keep
+%\begin{lstlisting}
+  %rec cut-admis : {Γ : lctxS} {A : [⊢ o]} [Γ ⊢ lconcS A[]]
+                  %→ [Γ, x:lhypS A[] ⊢ lconcS C[]]
+                  %→ [Γ ⊢ lconcS C[]] =
+  %/ total 1 /
+  %mlam Γ A ⇒ fn D E ⇒
+  %case (D, E) of
+    %%% */_ 
+    %| ([Γ ⊢ l⊃L0S h1 h2], [Γ, x : lhypS _ ⊢ E]) ⇒
+      %[Γ ⊢ lsnip1S (l⊃L0S h1 h2) (elig_c/l⊃L0S h1 h2) (\h. E[..,h])]
+    %%% ⊃R/⊃L0
+    %| ([Γ ⊢ l⊃RS (\h. D1)], [Γ, x : lhypS _ ⊢ l⊃L0S h1 h2]) ⇒
+      %(case ([Γ, x : lhypS _ ⊢ h2], [Γ, x : lhypS _ ⊢ h1]) of
+        %| ([Γ, x : lhypS _ ⊢ x], [Γ, x : lhypS _ ⊢ #h1[..] ]) ⇒
+          %[Γ ⊢ D1[..,#h1]]
+        %| ([Γ, x : lhypS _ ⊢ #h2[..]], [Γ, x : lhypS _ ⊢ x]) ⇒
+          %[Γ ⊢ lsnip2S (l⊃RS (\h. D1)) (\h. l⊃L0S h #h2[..]) (elig_h/l⊃L0S #h2[..])]
+        %| ([Γ, x : lhypS _ ⊢ #h2[..]], [Γ, x : lhypS _ ⊢ #h1[..]]) ⇒
+          %[Γ ⊢ l⊃L0S #h1 #h2]
+      %)
+    %%% _/Snip1
+    %| ([Γ ⊢ D], [Γ, x : lhypS _ ⊢ lsnip1S E1 e (\h. E2)]) ⇒
+      %let [Γ ⊢ F1] = cut-admis _ _ [Γ ⊢ D] [Γ, x : lhypS _  ⊢ E1] in
+      %let [Γ, x : lhypS _ ⊢ F2] =
+        %cut-admis _ _ [Γ, y:lhypS _ ⊢ D[..]] [Γ, x : lhypS _, y : lhypS _ ⊢ E2[..,x]] in
+      %cut-admis _ _ [Γ ⊢ F1] [Γ, y : lhypS _ ⊢ F2]
+    %%% _/Snip2
+    %| ([Γ ⊢ D], [Γ, x : lhypS _ ⊢ lsnip2S E1 (\h. E2) e]) ⇒
+      %let [Γ ⊢ F1] = cut-admis _ _ [Γ ⊢ D] [Γ, x : lhypS _  ⊢ E1] in
+      %let [Γ,  x : lhypS _ ⊢ F2] =
+        %cut-admis _ _ [Γ, y:lhypS _ ⊢ D[..]] [Γ, x : lhypS _, y : lhypS _ ⊢ E2[..,x]] in
+      %cut-admis _ _ [Γ ⊢ F1] [Γ, y : lhypS _ ⊢ F2]
+    %...
+    %;
+%\end{lstlisting}
+
+%% `cut-elim` is less interesting, the type signature is enough
+%\begin{lstlisting}
+  %rec cut-elim : {Γ : lctxS} [Γ ⊢ lconcS-cut A[]] → [Γ ⊢ lconcS A[]] = ...
+%\end{lstlisting}
+
+
+%\subsection{Subformula Property}
+
+%\begin{lstlisting}
+  %inductive subfProp : {Γ : lctxS} {Σ : [⊢ formlist]} {D : [Γ ⊢ lconcS A[]]} ctype =
+    %| subfProp/lsnip1 :
+        %(D : [Γ ⊢ lconcS A[]])
+        %(E: [Γ, x : lhypS A[] ⊢ lconcS B[]])
+        %{e : [Γ ⊢ elig_c D]}
+        %subfProp [Γ] [⊢ Σ] [Γ ⊢ D]
+        %→ [⊢ inSig A Σ]
+        %→ subfProp [Γ, x : lhypS A[]] [⊢ Σ] [Γ, x : lhypS A[] ⊢ E]
+        %→ subfProp [Γ] [⊢ Σ] [Γ ⊢ lsnip1S D e (\x. E[.., x])]
+    %| subfProp/lsnip2 :
+        %{e : [Γ  ⊢ elig_h (\x. E)]}
+        %subfProp [Γ] [⊢ Σ] [Γ ⊢ D]
+        %→ [⊢ inSig A Σ]
+        %→ subfProp [Γ, x : lhypS A[]] [⊢ Σ] [Γ, x : lhypS A[] ⊢ E]
+        %→ subfProp [Γ] [⊢ Σ] [Γ ⊢ lsnip2S D (\x. E[.., x]) e]
+    %...
+    %;
+%\end{lstlisting}
+
+
+%\begin{lstlisting}
+  %rec subformula-property : {Γ : lctxS} {D : [Γ ⊢ lconcS A[]]}
+                            %→ ctxInSig  [Γ] [⊢ Σ]
+                            %→ [⊢ inSig A Σ]
+                            %→ subfProp [Γ] [⊢ Σ] [Γ ⊢ D] =
+  %/ total 1 /
+  %mlam Γ D ⇒ fn ci goal ⇒
+  %case [Γ ⊢ D] of
+    %| [Γ ⊢ lsnip1S D' e (\h. E')] ⇒
+      %(case [Γ ⊢ e] of
+        %| [Γ ⊢ elig_c/l⊃L0S #h1 #h2] ⇒
+          %let ih2    = lookup ci [Γ ⊢ #h2] in
+          %let isig_B = subf-inSig [⊢ subf/⊃2 subf/refl] ih2 in
+          %let ih1    = lookup ci [Γ ⊢ #h1] in
+          %let sp_D   = subfProp/l⊃L0S [Γ ⊢ #h1] [Γ ⊢ #h2] ih1 ih2 in
+          %let ci'    = ctxInSig/cons ci isig_B in
+          %let sp_E   = subformula-property _ [Γ, h : lhypS _ ⊢ E'] ci' goal in
+          %subfProp/lsnip1 _ sp_D isig_B sp_E
+      %)
+    %| [Γ ⊢ lsnip2S D' (\h. E') e] ⇒
+      %(case [Γ ⊢ e] of
+        %| [Γ ⊢ elig_h/l⊃L0S #y] ⇒
+          %let ih_y   = lookup ci [Γ ⊢ #y] in
+          %let isig_A = subf-inSig [⊢ subf/⊃1 subf/refl] ih_y in
+          %let ci'    = ctxInSig/cons ci isig_A in
+          %let sp_D   = subformula-property _ [Γ ⊢ D'] ci isig_A in
+          %let sp_E   = subformula-property _ [Γ, h : lhypS _ ⊢ E'] ci' goal in
+          %subfProp/lsnip2 _ sp_D isig_A sp_E
+      %)
+    %...      
+    %;
+
+%\end{lstlisting}
