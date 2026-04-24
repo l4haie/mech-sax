@@ -139,12 +139,8 @@ snips ($\texttt{snip}^1$, $\texttt{snip}^2$).
 Beyond its proof-theoretic results, SAX admits a natural operational
 interpretation as a system of concurrent processes that interact
 asynchronously. This interpretation has been studied across several
-computational models, from shared memory concurrency \cite{DeYoung2020}
-to message-passing concurrency \cite{}, and each of these interpretations has
-been shown to satisfy desirable properties such as progress, preservation,
-confluence, and termination. Specifically, under the shared memory
-interpretation, variables are substituted by addresses at runtime, and thus the
-sequent
+computational models, from shared memory concurrency~\cite{DeYoung2020}
+to message-passing concurrency~\cite{FrancalanzaTP24}, and each of these interpretations has been shown to satisfy desirable properties such as progress, preservation confluence, and termination. Specifically, under the shared memory interpretation, variables are substituted by addresses at runtime, and thus the sequent
 \[
   x_1 : A_1, \ldots, x_n : A_n \vdash P :: (z : C)
 \]
@@ -157,15 +153,12 @@ rules write to memory while those assigned to left rules read from it.
 
 This low-level interpretation of SAX further gives rise, in extensions of SAX,
 to type-theoretically justified compiler optimizations such as in-place memory
-reuse \cite{}. Extensions of SAX in adjoint logic have also served as the
-logical foundation for concurrent language implementations \cite{}. All of these
-applications ultimately depend on the soundness of SAX's proof theory.
-
+reuse~\cite{DeYoungP23}. Extensions of SAX in adjoint logic have also served as the logical foundation for concurrent language implementations~\cite{DeYoungP23}. All of these applications ultimately depend on the soundness of SAX's proof theory.
 
 \subsection{Mechanization}
 
 This proof theory is, however, not trivial to prove. The original paper
-establishes the key proof-theoretic results, i.e. the admissibility of cut,
-cut-elimination, and the subformula property, but necessarily leaves a
+establishes the key proof-theoretic results, i.e.\ the admissibility of cut,
+cut-elimination, and the subformula property, but leaves a
 significant portion of the proofs implicit, due to their complexity. The central
-difficulty, as discussed above is
+difficulty, as discussed above, is the proper representation of eligibility and reasoning about it within a proof system. We hope that this project can serve as a case study in the techniques established in~\cite{crary2009substructural} and~\cite{Sanomech}.
