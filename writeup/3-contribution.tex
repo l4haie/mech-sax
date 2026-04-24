@@ -125,16 +125,17 @@ requires only adding the corresponding \texttt{elig\_h} constructors for
 each eligible position in the new axioms, along with the matching cases
 in the proofs below.
 
-This approach is related to the linearity predicates of Sano, Kavanagh,
-and Pientka~\cite{Sanomech}, who encode linearity constraints for
-session types as LF predicates within type judgments rather than using
-linear contexts. Their predicates track a global resource-usage property
-of channel variables; ours track a local positional property of a
-specific occurrence within an axiom. A variable can be eligible in one
-part of a derivation and ineligible in another, so the predicates are
-indexed over derivation terms rather than variables to capture this
-per-occurrence character.
-
+Sano, Kavanagh, and Pientka~\cite{Sanomech} face an analogous challenge when
+mechanizing session-typed process calculi in Beluga. Session types require linear
+channel contexts, but HOAS encodings in LF use structural contexts. Their
+solution, directly inspired by Crary, is to replace linear context management
+with local linearity predicates embedded within type judgments, which
+check that each channel is used linearly without requiring the ambient context
+itself to be linear. Our eligible-formula predicates serve precisely the same
+role: rather than enforcing the eligibility of SAX at the level of
+the context, we localize it as an additional predicate on the relevant
+hypotheses. A variable can be eligible in one part of a derivation and ineligible in another, so the predicates are indexed over derivation terms rather than variables to capture this per-occurrence character. Both approaches allow the mechanization to exploit Beluga's contexts and higher-order unification while still faithfully capturing
+the intended  behaviour, whether for substructurality of eligibility.
 \subsection{Translation Between $G_3$ and SAX}
 
 Both directions of Theorem~1 are recursive functions over derivations
@@ -216,7 +217,7 @@ is commuted past that rule. When $E$ ends with a snip, the outer cut is
 pushed inside both premises via two recursive calls; if eligibility is
 lost the snip becomes a general cut, which is permitted since the
 formula type is then a strict subformula of the cut type. A case worth
-noting is $\texttt{\_/l} \otimes \texttt{R0S}$, which requires enumerating all combinations
+noting is $\texttt{\_/l} {\otimes} \texttt{R0S}$, which requires enumerating all combinations
 of the cut variable $x$ appearing in the argument positions of the tensor
 axiom, including the degenerate case where both positions are the same
 variable:
