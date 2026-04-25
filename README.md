@@ -25,5 +25,5 @@ the following files:
 
 From the root of the repository, run:
 ```
-beluga beluga/soprillo.cfg
+beluga beluga/proj.cfg
 ```
